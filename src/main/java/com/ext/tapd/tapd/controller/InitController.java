@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -27,7 +29,7 @@ import static java.util.Objects.nonNull;
 /**
  * 全量初始化数据表
  */
-@RestController
+@Controller
 @RequestMapping("/init")
 public class InitController {
     private static Logger logger = LoggerFactory.getLogger(InitController.class);
@@ -55,7 +57,12 @@ public class InitController {
     private final HttpHeaders headers = new HttpHeaders();
 
     @RequestMapping(value = "/initTable", method = RequestMethod.GET)
-    public String initTable() {
+    public String initTable(Model model) {
+        return "index";
+    }
+
+    @RequestMapping(value = "/initData", method = RequestMethod.GET)
+    public String initData() {
         logger.info("=======初始化数据表开始=======");
         logger.info("=========================>清空公司表======================");
         workspaceRepository.truncateTable();

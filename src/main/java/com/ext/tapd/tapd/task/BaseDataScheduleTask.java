@@ -42,7 +42,7 @@ public class BaseDataScheduleTask {
         String[] systems = {"story", "bug"};
         for (Workspace workspace : workspaces) {
             for (String system : systems) {
-                String url = "https://api.tapd.cn/workflows/status_map?system=" + system + "&workspace_id=" + workspace.getId();
+                String url = String.format("https://api.tapd.cn/workflows/status_map?system=%s&workspace_id=%d", system, workspace.getId());
                 //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
                 HttpHeaders headers = new HttpHeaders();
                 headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString("XFzFJy1k:1BF133BB-0B17-E7C1-A04A-067C761B353C".getBytes()));
