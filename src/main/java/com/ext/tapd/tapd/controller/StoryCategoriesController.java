@@ -57,12 +57,11 @@ public class StoryCategoriesController {
                             .create();
                     ResultEntity vo = g.fromJson(gson, ResultEntity.class);
                     if (vo.getData().size() > 0) {
-                        for (LinkedTreeMap map : vo.getData()) {
-                            String gsonStr = g.toJson(map.get("Category"));
+                        vo.getData().stream().map(map -> g.toJson(map.get("Category"))).forEach(gsonStr -> {
                             System.out.println(gsonStr);
                             StoryCategories storyCategories = g.fromJson(gsonStr, StoryCategories.class);
                             storyCategoriesRepository.save(storyCategories);
-                        }
+                        });
                     }
                 }
             } else {
@@ -77,12 +76,11 @@ public class StoryCategoriesController {
                         .create();
                 ResultEntity vo = g.fromJson(gson, ResultEntity.class);
                 if (vo.getData().size() > 0) {
-                    for (LinkedTreeMap map : vo.getData()) {
-                        String gsonStr = g.toJson(map.get("Category"));
+                    vo.getData().stream().map(map -> g.toJson(map.get("Category"))).forEach(gsonStr -> {
                         System.out.println(gsonStr);
                         StoryCategories storyCategories = g.fromJson(gsonStr, StoryCategories.class);
                         storyCategoriesRepository.save(storyCategories);
-                    }
+                    });
                 }
             }
         }

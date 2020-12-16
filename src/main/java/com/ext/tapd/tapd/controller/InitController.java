@@ -424,7 +424,7 @@ public class InitController {
     }
 
     public void initWorkspace() {
-        String url = "https://api.tapd.cn/workspaces/projects?company_id=" + companyId;
+        String url = String.format("https://api.tapd.cn/workspaces/projects?company_id=%s", companyId);
         //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
         HttpHeaders headers = new HttpHeaders();
         headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString("XFzFJy1k:1BF133BB-0B17-E7C1-A04A-067C761B353C".getBytes()));
@@ -439,11 +439,12 @@ public class InitController {
         ResultEntity vo = g.fromJson(gson, ResultEntity.class);
         if (vo.getData().size() > 0) {
             vo.getData().stream().map(map -> g.toJson(map.get("Workspace"))).forEach(gsonStr -> {
-                System.out.println(gsonStr);
-                Workspace bug = g.fromJson(gsonStr, Workspace.class);
-                workspaceRepository.save(bug);
+                logger.debug("[workspace:]" + gsonStr);
+                Workspace workspace = g.fromJson(gsonStr, Workspace.class);
+                List<String> list = Arrays.asList(ids.split(","));
+                if (list.contains(String.valueOf(workspace.getId())))
+                    workspaceRepository.save(workspace);
             });
-
         }
     }
 
