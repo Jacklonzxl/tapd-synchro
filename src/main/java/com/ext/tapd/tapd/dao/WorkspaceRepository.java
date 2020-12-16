@@ -1,6 +1,5 @@
 package com.ext.tapd.tapd.dao;
 
-import com.ext.tapd.tapd.pojo.Task;
 import com.ext.tapd.tapd.pojo.Workspace;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -14,6 +13,6 @@ public interface WorkspaceRepository extends CrudRepository<Workspace, Long> {
 
     @Transactional
     @Modifying
-    @Query(value = "truncate table t_workspace",nativeQuery = true)
+    @Query(value = "truncate table t_workspace", nativeQuery = true)
     public void truncateTable();
 }

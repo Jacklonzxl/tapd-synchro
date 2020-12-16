@@ -1,7 +1,6 @@
 package com.ext.tapd.tapd.controller;
 
 import com.ext.tapd.tapd.common.status.SPriorityEnum;
-import com.ext.tapd.tapd.common.status.StatusEnum;
 import com.ext.tapd.tapd.dao.*;
 import com.ext.tapd.tapd.pojo.*;
 import com.google.gson.Gson;
@@ -27,7 +26,6 @@ import java.util.Optional;
 public class StorieController {
     @Autowired
     private RestTemplate restTemplate;
-
     @Autowired
     private StoryRepository storyRepository;
     @Autowired
@@ -43,11 +41,11 @@ public class StorieController {
     private String ids;
 
     //初始化task
-    @RequestMapping(value = "/initStorie",method = RequestMethod.GET)
-    public String initStorie(){
+    @RequestMapping(value = "/initStorie", method = RequestMethod.GET)
+    public String initStorie() {
 
         String[] idsStr = ids.split(",");
-        for(String workspaceId : idsStr) {
+        for (String workspaceId : idsStr) {
             String url = "https://api.tapd.cn/stories?workspace_id=" + workspaceId;
             //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
             HttpHeaders headers = new HttpHeaders();
@@ -63,7 +61,7 @@ public class StorieController {
                             new HttpEntity<>(null, headers),   //加入headers
                             String.class);  //body响应数据接收类型
                     String gson = ans.getBody();
-                    Gson g =new GsonBuilder()
+                    Gson g = new GsonBuilder()
                             .setDateFormat("yyyy-MM-dd HH:mm:ss")
                             .create();
                     ResultEntity vo = g.fromJson(gson, ResultEntity.class);
@@ -75,19 +73,19 @@ public class StorieController {
 //                            story.setStatus(StatusEnum.getValue(story.getStatus()));
                             story.setPriority(SPriorityEnum.getValue(story.getPriority()));
                             Optional<Iteration> iteration = iterationRepository.findById(story.getIteration_id());
-                            if(iteration.isPresent()){
+                            if (iteration.isPresent()) {
                                 story.setIteration_name(iteration.get().getName());
                             }
                             Optional<StoryCategories> categories = storyCategoriesRepository.findById(story.getCategory_id());
-                            if(categories.isPresent()){
+                            if (categories.isPresent()) {
                                 story.setCategory_name(categories.get().getName());
                             }
                             Optional<Workspace> workspace = workspaceRepository.findById(story.getWorkspace_id());
-                            if(workspace.isPresent()){
+                            if (workspace.isPresent()) {
                                 story.setWorkspace_name(workspace.get().getName());
                             }
-                            StatusMap statusMap = statusMapRepository.findByCodeAndSystemAndWorkspaceId(story.getStatus(),"story",story.getWorkspace_id());
-                            if(Objects.nonNull(statusMap)){
+                            StatusMap statusMap = statusMapRepository.findByCodeAndSystemAndWorkspaceId(story.getStatus(), "story", story.getWorkspace_id());
+                            if (Objects.nonNull(statusMap)) {
                                 story.setStatus(statusMap.getName());
                             }
                             storyRepository.save(story);
@@ -101,7 +99,7 @@ public class StorieController {
                         new HttpEntity<>(null, headers),   //加入headers
                         String.class);  //body响应数据接收类型
                 String gson = ans.getBody();
-                Gson g =new GsonBuilder()
+                Gson g = new GsonBuilder()
                         .setDateFormat("yyyy-MM-dd HH:mm:ss")
                         .create();
                 ResultEntity vo = g.fromJson(gson, ResultEntity.class);
@@ -113,19 +111,19 @@ public class StorieController {
 //                        story.setStatus(StatusEnum.getValue(story.getStatus()));
                         story.setPriority(SPriorityEnum.getValue(story.getPriority()));
                         Optional<Iteration> iteration = iterationRepository.findById(story.getIteration_id());
-                        if(iteration.isPresent()){
+                        if (iteration.isPresent()) {
                             story.setIteration_name(iteration.get().getName());
                         }
                         Optional<StoryCategories> categories = storyCategoriesRepository.findById(story.getCategory_id());
-                        if(categories.isPresent()){
+                        if (categories.isPresent()) {
                             story.setCategory_name(categories.get().getName());
                         }
                         Optional<Workspace> workspace = workspaceRepository.findById(story.getWorkspace_id());
-                        if(workspace.isPresent()){
+                        if (workspace.isPresent()) {
                             story.setWorkspace_name(workspace.get().getName());
                         }
-                        StatusMap statusMap = statusMapRepository.findByCodeAndSystemAndWorkspaceId(story.getStatus(),"story",story.getWorkspace_id());
-                        if(Objects.nonNull(statusMap)){
+                        StatusMap statusMap = statusMapRepository.findByCodeAndSystemAndWorkspaceId(story.getStatus(), "story", story.getWorkspace_id());
+                        if (Objects.nonNull(statusMap)) {
                             story.setStatus(statusMap.getName());
                         }
                         storyRepository.save(story);
@@ -136,11 +134,11 @@ public class StorieController {
         return "执行成功";
     }
 
-    private int getCount(final String workspaceId){
-        String url = "https://api.tapd.cn/stories/count?workspace_id="+workspaceId;
+    private int getCount(final String workspaceId) {
+        String url = "https://api.tapd.cn/stories/count?workspace_id=" + workspaceId;
         //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
         HttpHeaders headers = new HttpHeaders();
-        headers.set("authorization","Basic " +Base64.getEncoder().encodeToString("XFzFJy1k:1BF133BB-0B17-E7C1-A04A-067C761B353C".getBytes()));
+        headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString("XFzFJy1k:1BF133BB-0B17-E7C1-A04A-067C761B353C".getBytes()));
         //发送请求
         HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,   //GET请求
                 new HttpEntity<>(null, headers),   //加入headers
@@ -148,12 +146,12 @@ public class StorieController {
         System.out.println(ans);
         String gson = ans.getBody();
         System.out.println(gson);
-        Gson g =new GsonBuilder()
+        Gson g = new GsonBuilder()
                 .setDateFormat("yyyy-MM-dd HH:mm:ss")
                 .create();
-        ResultCountEntity vo =  g.fromJson(gson, ResultCountEntity.class);
+        ResultCountEntity vo = g.fromJson(gson, ResultCountEntity.class);
         Map map = vo.getData();
-        int count =  new Double((Double)map.get("count")).intValue();
+        int count = new Double((Double) map.get("count")).intValue();
         return count;
     }
 }

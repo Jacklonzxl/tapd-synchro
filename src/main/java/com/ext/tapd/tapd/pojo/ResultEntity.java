@@ -2,7 +2,6 @@ package com.ext.tapd.tapd.pojo;
 
 import com.google.gson.internal.LinkedTreeMap;
 
-import java.util.IdentityHashMap;
 import java.util.List;
 
 public class ResultEntity {

@@ -13,6 +13,6 @@ public interface TaskRepository extends CrudRepository<Task, Integer> {
 
     @Transactional
     @Modifying
-    @Query(value = "truncate table t_tasks",nativeQuery = true)
+    @Query(value = "truncate table t_tasks", nativeQuery = true)
     public void truncateTable();
 }

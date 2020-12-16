@@ -38,28 +38,28 @@ public class WorkSpaceController {
 
 
     //初始化task
-    @RequestMapping(value = "/initWorkspace",method = RequestMethod.GET)
-    public String initWorkspace(){
-            String url = "https://api.tapd.cn/workspaces/projects?company_id="+companyId;
-            //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("authorization","Basic " + Base64.getEncoder().encodeToString("XFzFJy1k:1BF133BB-0B17-E7C1-A04A-067C761B353C".getBytes()));
-            //发送请求
-             HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,   //GET请求
-                            new HttpEntity<>(null, headers),   //加入headers
-                            String.class);  //body响应数据接收类型
-             String gson = ans.getBody();
-             Gson g =new GsonBuilder()
+    @RequestMapping(value = "/initWorkspace", method = RequestMethod.GET)
+    public String initWorkspace() {
+        String url = "https://api.tapd.cn/workspaces/projects?company_id=" + companyId;
+        //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString("XFzFJy1k:1BF133BB-0B17-E7C1-A04A-067C761B353C".getBytes()));
+        //发送请求
+        HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,   //GET请求
+                new HttpEntity<>(null, headers),   //加入headers
+                String.class);  //body响应数据接收类型
+        String gson = ans.getBody();
+        Gson g = new GsonBuilder()
                 .setDateFormat("yyyy-MM-dd HH:mm:ss")
                 .create();
-             ResultEntity vo =  g.fromJson(gson, ResultEntity.class);
-             if(vo.getData().size()>0) {
-                        for(LinkedTreeMap map : vo.getData()){
-                            String gsonStr = g.toJson( map.get("Workspace"));
-                            System.out.println(gsonStr);
-                            Workspace bug = g.fromJson(gsonStr, Workspace.class);
-                            workspaceRepository.save(bug);
-             }
+        ResultEntity vo = g.fromJson(gson, ResultEntity.class);
+        if (vo.getData().size() > 0) {
+            for (LinkedTreeMap map : vo.getData()) {
+                String gsonStr = g.toJson(map.get("Workspace"));
+                System.out.println(gsonStr);
+                Workspace bug = g.fromJson(gsonStr, Workspace.class);
+                workspaceRepository.save(bug);
+            }
 
         }
         return "执行成功";

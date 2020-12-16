@@ -11,7 +11,7 @@ public class StatusMap implements Serializable {
 
     @Id
     @Column(name = "id")
-    @GeneratedValue(strategy= GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     private String code;

@@ -1,12 +1,11 @@
 package com.ext.tapd.tapd.pojo;
 
-import java.util.List;
 import java.util.Map;
 
 public class ResultStatusEntity {
 
     private Integer status;
-    private Map<String,Object> data;
+    private Map<String, Object> data;
     private String info;
 
     public Integer getStatus() {
@@ -17,11 +16,11 @@ public class ResultStatusEntity {
         this.status = status;
     }
 
-    public Map<String,Object>  getData() {
+    public Map<String, Object> getData() {
         return data;
     }
 
-    public void setData(Map<String,Object>  data) {
+    public void setData(Map<String, Object> data) {
         this.data = data;
     }
 

@@ -12,6 +12,6 @@ import javax.transaction.Transactional;
 public interface StoryRepository extends CrudRepository<Story, Long> {
     @Transactional
     @Modifying
-    @Query(value = "truncate table t_stories",nativeQuery = true)
+    @Query(value = "truncate table t_stories", nativeQuery = true)
     public void truncateStories();
 }

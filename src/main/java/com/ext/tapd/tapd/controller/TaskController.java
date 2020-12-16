@@ -1,6 +1,5 @@
 package com.ext.tapd.tapd.controller;
 
-import com.ext.tapd.tapd.common.status.PriorityEnum;
 import com.ext.tapd.tapd.common.status.SPriorityEnum;
 import com.ext.tapd.tapd.common.status.StatusEnum;
 import com.ext.tapd.tapd.dao.IterationRepository;
@@ -32,8 +31,6 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/task")
 public class TaskController {
-
-
     @Autowired
     private RestTemplate restTemplate;
     @Autowired
@@ -50,10 +47,10 @@ public class TaskController {
     private final Logger logger = LoggerFactory.getLogger(TaskController.class);
 
     //初始化task
-    @RequestMapping(value = "/initTask",method = RequestMethod.GET)
-    public String initTask(){
+    @RequestMapping(value = "/initTask", method = RequestMethod.GET)
+    public String initTask() {
         String[] idsStr = ids.split(",");
-        for(String workspaceId : idsStr) {
+        for (String workspaceId : idsStr) {
             String url = "https://api.tapd.cn/tasks?workspace_id=" + workspaceId;
             //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
             HttpHeaders headers = new HttpHeaders();
@@ -69,7 +66,7 @@ public class TaskController {
                             new HttpEntity<>(null, headers),   //加入headers
                             String.class);  //body响应数据接收类型
                     String gson = ans.getBody();
-                    Gson g =new GsonBuilder()
+                    Gson g = new GsonBuilder()
                             .setDateFormat("yyyy-MM-dd HH:mm:ss")
                             .create();
                     ResultEntity vo = g.fromJson(gson, ResultEntity.class);
@@ -80,17 +77,17 @@ public class TaskController {
                             Task task = g.fromJson(gsonStr, Task.class);
                             task.setStatus(StatusEnum.getValue(task.getStatus()));
                             task.setPriority(SPriorityEnum.getValue(task.getPriority()));
-                            task.setProgress(task.getProgress()+"%");
+                            task.setProgress(task.getProgress() + "%");
                             Optional<Iteration> iteration = iterationRepository.findById(task.getIteration_id());
-                            if(iteration.isPresent()){
+                            if (iteration.isPresent()) {
                                 task.setIteration_name(iteration.get().getName());
                             }
-                            Optional<Story> story =storyRepository.findById(task.getStory_id());
-                            if(story.isPresent()){
+                            Optional<Story> story = storyRepository.findById(task.getStory_id());
+                            if (story.isPresent()) {
                                 task.setStory_name(story.get().getName());
                             }
                             Optional<Workspace> workspace = workspaceRepository.findById(task.getWorkspace_id());
-                            if(workspace.isPresent()){
+                            if (workspace.isPresent()) {
                                 task.setWorkspace_name(workspace.get().getName());
                             }
                             taskRepository.save(task);
@@ -104,7 +101,7 @@ public class TaskController {
                         new HttpEntity<>(null, headers),   //加入headers
                         String.class);  //body响应数据接收类型
                 String gson = ans.getBody();
-                Gson g =new GsonBuilder()
+                Gson g = new GsonBuilder()
                         .setDateFormat("yyyy-MM-dd HH:mm:ss")
                         .create();
                 ResultEntity vo = g.fromJson(gson, ResultEntity.class);
@@ -115,17 +112,17 @@ public class TaskController {
                         Task task = g.fromJson(gsonStr, Task.class);
                         task.setStatus(StatusEnum.getValue(task.getStatus()));
                         task.setPriority(SPriorityEnum.getValue(task.getPriority()));
-                        task.setProgress(task.getProgress()+"%");
+                        task.setProgress(task.getProgress() + "%");
                         Optional<Iteration> iteration = iterationRepository.findById(task.getIteration_id());
-                        if(iteration.isPresent()){
+                        if (iteration.isPresent()) {
                             task.setIteration_name(iteration.get().getName());
                         }
-                        Optional<Story> story =storyRepository.findById(task.getStory_id());
-                        if(story.isPresent()){
+                        Optional<Story> story = storyRepository.findById(task.getStory_id());
+                        if (story.isPresent()) {
                             task.setStory_name(story.get().getName());
                         }
                         Optional<Workspace> workspace = workspaceRepository.findById(task.getWorkspace_id());
-                        if(workspace.isPresent()){
+                        if (workspace.isPresent()) {
                             task.setWorkspace_name(workspace.get().getName());
                         }
                         taskRepository.save(task);
@@ -137,16 +134,16 @@ public class TaskController {
     }
 
     @GetMapping("/log")
-    public String getlog(){
+    public String getlog() {
         logger.debug("==============打印日志111===================");
         return "执行完成";
     }
 
-    private int getCount(final String workspaceId){
-        String url = "https://api.tapd.cn/tasks/count?workspace_id="+workspaceId;
+    private int getCount(final String workspaceId) {
+        String url = "https://api.tapd.cn/tasks/count?workspace_id=" + workspaceId;
         //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
         HttpHeaders headers = new HttpHeaders();
-        headers.set("authorization","Basic " +Base64.getEncoder().encodeToString("XFzFJy1k:1BF133BB-0B17-E7C1-A04A-067C761B353C".getBytes()));
+        headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString("XFzFJy1k:1BF133BB-0B17-E7C1-A04A-067C761B353C".getBytes()));
         //发送请求
         HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,   //GET请求
                 new HttpEntity<>(null, headers),   //加入headers
@@ -154,12 +151,12 @@ public class TaskController {
         System.out.println(ans);
         String gson = ans.getBody();
         System.out.println(gson);
-        Gson g =new GsonBuilder()
+        Gson g = new GsonBuilder()
                 .setDateFormat("yyyy-MM-dd HH:mm:ss")
                 .create();
-        ResultCountEntity vo =  g.fromJson(gson, ResultCountEntity.class);
+        ResultCountEntity vo = g.fromJson(gson, ResultCountEntity.class);
         Map map = vo.getData();
-        int count =  new Double((Double)map.get("count")).intValue();
+        int count = new Double((Double) map.get("count")).intValue();
         return count;
     }
 }

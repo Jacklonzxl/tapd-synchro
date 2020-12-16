@@ -13,6 +13,6 @@ public interface StoryCategoriesRepository extends CrudRepository<StoryCategorie
 
     @Transactional
     @Modifying
-    @Query(value = "truncate table t_story_categories",nativeQuery = true)
+    @Query(value = "truncate table t_story_categories", nativeQuery = true)
     public void truncateTable();
 }

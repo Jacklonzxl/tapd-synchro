@@ -22,7 +22,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static java.util.Objects.*;
+import static java.util.Objects.nonNull;
 
 /**
  * 全量初始化数据表
@@ -54,8 +54,8 @@ public class InitController {
     private String ids;
     private final HttpHeaders headers = new HttpHeaders();
 
-    @RequestMapping(value = "/initTable",method = RequestMethod.GET)
-    public String initTable(){
+    @RequestMapping(value = "/initTable", method = RequestMethod.GET)
+    public String initTable() {
         logger.info("=======初始化数据表开始=======");
         logger.info("=========================>清空公司表======================");
         workspaceRepository.truncateTable();
@@ -82,11 +82,11 @@ public class InitController {
         return "全量更新完成";
     }
 
-    public void initStatusMap(){
+    public void initStatusMap() {
         List<Workspace> workspaces;
         workspaces = (List<Workspace>) workspaceRepository.findAll();
         String[] systems;
-        systems = new String[]{"story","bug"};
+        systems = new String[]{"story", "bug"};
         workspaces.forEach(workspace -> {
             //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
             //发送请求
@@ -118,25 +118,25 @@ public class InitController {
         logger.info("=========================>更新状态表完毕======================");
     }
 
-    private void excuteTask(String type){
+    private void excuteTask(String type) {
         String[] idsStr = ids.split(",");
-        for(String workspaceId : idsStr){
-            String url = "https://api.tapd.cn/"+type+"?workspace_id="+workspaceId;
+        for (String workspaceId : idsStr) {
+            String url = "https://api.tapd.cn/" + type + "?workspace_id=" + workspaceId;
             //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
-            headers.set("authorization","Basic " + Base64.getEncoder().encodeToString("XFzFJy1k:1BF133BB-0B17-E7C1-A04A-067C761B353C".getBytes()));
+            headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString("XFzFJy1k:1BF133BB-0B17-E7C1-A04A-067C761B353C".getBytes()));
 
-            switch (type){
+            switch (type) {
                 case "bugs":
-                    saveBug(workspaceId,url);
+                    saveBug(workspaceId, url);
                     break;
                 case "tasks":
-                    saveTask(workspaceId,url);
+                    saveTask(workspaceId, url);
                     break;
                 case "stories":
-                    saveStory(workspaceId,url);
+                    saveStory(workspaceId, url);
                     break;
                 case "iterations":
-                    saveIteration(workspaceId,url);
+                    saveIteration(workspaceId, url);
                     break;
                 default:
                     break;
@@ -144,27 +144,27 @@ public class InitController {
         }
     }
 
-    private void saveBug(String workspaceId,String url){
-        int count = getCount(workspaceId,"bugs");
-        logger.info("[BUG更新总数：]"+count);
+    private void saveBug(String workspaceId, String url) {
+        int count = getCount(workspaceId, "bugs");
+        logger.info("[BUG更新总数：]" + count);
         AtomicInteger totalPage = new AtomicInteger();
-        if(count>200){
+        if (count > 200) {
             totalPage.set((count / 200) + 1);
-            for(int i = 1; i<= totalPage.get(); i++){
-                url = url+"&limit=200&page="+i;
+            for (int i = 1; i <= totalPage.get(); i++) {
+                url = url + "&limit=200&page=" + i;
                 //发送请求
                 HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,   //GET请求
                         new HttpEntity<>(null, headers),   //加入headers
                         String.class);  //body响应数据接收类型
                 String gson = ans.getBody();
-                Gson g =new GsonBuilder()
+                Gson g = new GsonBuilder()
                         .setDateFormat("yyyy-MM-dd HH:mm:ss")
                         .create();
-                ResultEntity vo =  g.fromJson(gson, ResultEntity.class);
-                if(vo.getData().size()>0) {
-                    for(LinkedTreeMap map : vo.getData()){
-                        String gsonStr = g.toJson( map.get("Bug"));
-                        logger.info("[BUG:]"+gsonStr);
+                ResultEntity vo = g.fromJson(gson, ResultEntity.class);
+                if (vo.getData().size() > 0) {
+                    for (LinkedTreeMap map : vo.getData()) {
+                        String gsonStr = g.toJson(map.get("Bug"));
+                        logger.info("[BUG:]" + gsonStr);
                         Bug bug = g.fromJson(gsonStr, Bug.class);
                         bug.setPriority(PriorityEnum.getValue(bug.getPriority()));
                         bug.setSeverity(SeverityEnum.getValue(bug.getSeverity()));
@@ -173,26 +173,25 @@ public class InitController {
                         iteration.ifPresent(value -> bug.setIteration_name(value.getName()));
                         Optional<Workspace> workspace = workspaceRepository.findById(bug.getWorkspace_id());
                         workspace.ifPresent(value -> bug.setWorkspace_name(value.getName()));
-                        StatusMap statusMap = statusMapRepository.findByCodeAndSystemAndWorkspaceId(bug.getStatus(),"bug",bug.getWorkspace_id());
-                        if(nonNull(statusMap)){
+                        StatusMap statusMap = statusMapRepository.findByCodeAndSystemAndWorkspaceId(bug.getStatus(), "bug", bug.getWorkspace_id());
+                        if (nonNull(statusMap)) {
                             bug.setStatus(statusMap.getName());
                         }
                         bugRepository.save(bug);
                     }
                 }
             }
-        } else
-        {
-            url = url+"&limit=200";
+        } else {
+            url = url + "&limit=200";
             //发送请求
             HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,   //GET请求
                     new HttpEntity<>(null, headers),   //加入headers
                     String.class);  //body响应数据接收类型
             String gson = ans.getBody();
-            Gson g =new GsonBuilder()
+            Gson g = new GsonBuilder()
                     .setDateFormat("yyyy-MM-dd HH:mm:ss")
                     .create();
-            ResultEntity vo =  g.fromJson(gson, ResultEntity.class);
+            ResultEntity vo = g.fromJson(gson, ResultEntity.class);
             if (vo.getData().size() <= 0) return;
             vo.getData().stream().map(map -> g.toJson(map.get("Bug"))).forEachOrdered(gsonStr -> {
                 logger.info("[BUG:]" + gsonStr);
@@ -211,27 +210,27 @@ public class InitController {
         }
     }
 
-    private void saveIteration(String workspaceId,String url){
-        int count = getCount(workspaceId,"iterations");
-        logger.info("[Iteration更新总数：]"+count);
+    private void saveIteration(String workspaceId, String url) {
+        int count = getCount(workspaceId, "iterations");
+        logger.info("[Iteration更新总数：]" + count);
         AtomicInteger totalPage = new AtomicInteger();
-        if(count>200){
+        if (count > 200) {
             totalPage.set((count / 200) + 1);
-            for(int i = 1; i<= totalPage.get(); i++){
+            for (int i = 1; i <= totalPage.get(); i++) {
                 url += "&limit=200&page=" + i;
                 //发送请求
                 HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,   //GET请求
                         new HttpEntity<>(null, headers),   //加入headers
                         String.class);  //body响应数据接收类型
                 String gson = ans.getBody();
-                Gson g =new GsonBuilder()
+                Gson g = new GsonBuilder()
                         .setDateFormat("yyyy-MM-dd HH:mm:ss")
                         .create();
-                ResultEntity vo =  g.fromJson(gson, ResultEntity.class);
-                if(vo.getData().size()>0) {
-                    for(LinkedTreeMap map : vo.getData()){
-                        String gsonStr = g.toJson( map.get("Iteration"));
-                        logger.info("[Iteration:]"+gsonStr);
+                ResultEntity vo = g.fromJson(gson, ResultEntity.class);
+                if (vo.getData().size() > 0) {
+                    for (LinkedTreeMap map : vo.getData()) {
+                        String gsonStr = g.toJson(map.get("Iteration"));
+                        logger.info("[Iteration:]" + gsonStr);
                         Iteration iteration = g.fromJson(gsonStr, Iteration.class);
                         Optional<Workspace> workspace = workspaceRepository.findById(iteration.getWorkspace_id());
                         workspace.ifPresent(value -> iteration.setWorkspace_name(value.getName()));
@@ -239,22 +238,21 @@ public class InitController {
                     }
                 }
             }
-        } else
-        {
+        } else {
             url += "&limit=200";
             //发送请求
             HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,   //GET请求
                     new HttpEntity<>(null, headers),   //加入headers
                     String.class);  //body响应数据接收类型
             String gson = ans.getBody();
-            Gson g =new GsonBuilder()
+            Gson g = new GsonBuilder()
                     .setDateFormat("yyyy-MM-dd HH:mm:ss")
                     .create();
-            ResultEntity vo =  g.fromJson(gson, ResultEntity.class);
-            if(vo.getData().size()>0) {
-                for(LinkedTreeMap map : vo.getData()){
-                    String gsonStr = g.toJson( map.get("Iteration"));
-                    logger.info("[Iteration]"+gsonStr);
+            ResultEntity vo = g.fromJson(gson, ResultEntity.class);
+            if (vo.getData().size() > 0) {
+                for (LinkedTreeMap map : vo.getData()) {
+                    String gsonStr = g.toJson(map.get("Iteration"));
+                    logger.info("[Iteration]" + gsonStr);
                     Iteration iteration = g.fromJson(gsonStr, Iteration.class);
                     Optional<Workspace> workspace = workspaceRepository.findById(iteration.getWorkspace_id());
                     workspace.ifPresent(value -> iteration.setWorkspace_name(value.getName()));
@@ -264,34 +262,34 @@ public class InitController {
         }
     }
 
-    private void saveTask(String workspaceId,String url){
-        int count = getCount(workspaceId,"tasks");
-        logger.info("[Task更新总数：]"+count);
+    private void saveTask(String workspaceId, String url) {
+        int count = getCount(workspaceId, "tasks");
+        logger.info("[Task更新总数：]" + count);
         AtomicInteger totalPage = new AtomicInteger();
-        if(count>200){
+        if (count > 200) {
             totalPage.set((count / 200) + 1);
-            for(int i = 1; i<= totalPage.get(); i++){
-                url = url+"&limit=200&page="+i;
+            for (int i = 1; i <= totalPage.get(); i++) {
+                url = url + "&limit=200&page=" + i;
                 //发送请求
                 HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,   //GET请求
                         new HttpEntity<>(null, headers),   //加入headers
                         String.class);  //body响应数据接收类型
                 String gson = ans.getBody();
-                Gson g =new GsonBuilder()
+                Gson g = new GsonBuilder()
                         .setDateFormat("yyyy-MM-dd HH:mm:ss")
                         .create();
-                ResultEntity vo =  g.fromJson(gson, ResultEntity.class);
-                if(vo.getData().size()>0) {
-                    for(LinkedTreeMap map : vo.getData()){
-                        String gsonStr = g.toJson( map.get("Task"));
-                        logger.info("[Task]"+gsonStr);
+                ResultEntity vo = g.fromJson(gson, ResultEntity.class);
+                if (vo.getData().size() > 0) {
+                    for (LinkedTreeMap map : vo.getData()) {
+                        String gsonStr = g.toJson(map.get("Task"));
+                        logger.info("[Task]" + gsonStr);
                         Task task = g.fromJson(gsonStr, Task.class);
                         task.setStatus(StatusEnum.getValue(task.getStatus()));
                         task.setPriority(SPriorityEnum.getValue(task.getPriority()));
-                        task.setProgress(task.getProgress()+"%");
+                        task.setProgress(task.getProgress() + "%");
                         Optional<Iteration> iteration = iterationRepository.findById(task.getIteration_id());
                         iteration.ifPresent(value -> task.setIteration_name(value.getName()));
-                        Optional<Story> story =storyRepository.findById(task.getStory_id());
+                        Optional<Story> story = storyRepository.findById(task.getStory_id());
                         story.ifPresent(value -> task.setStory_name(value.getName()));
                         Optional<Workspace> workspace = workspaceRepository.findById(task.getWorkspace_id());
                         workspace.ifPresent(value -> task.setWorkspace_name(value.getName()));
@@ -299,18 +297,17 @@ public class InitController {
                     }
                 }
             }
-        } else
-        {
-            url = url+"&limit=200";
+        } else {
+            url = url + "&limit=200";
             //发送请求
             HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,   //GET请求
                     new HttpEntity<>(null, headers),   //加入headers
                     String.class);  //body响应数据接收类型
             String gson = ans.getBody();
-            Gson g =new GsonBuilder()
+            Gson g = new GsonBuilder()
                     .setDateFormat("yyyy-MM-dd HH:mm:ss")
                     .create();
-            ResultEntity vo =  g.fromJson(gson, ResultEntity.class);
+            ResultEntity vo = g.fromJson(gson, ResultEntity.class);
             if (vo.getData().size() <= 0) {
                 return;
             }
@@ -331,13 +328,13 @@ public class InitController {
         }
     }
 
-    private void saveStory(String workspaceId,String url){
-        int count = getCount(workspaceId,"stories");
-        logger.info("[Story更新总数：]"+count);
+    private void saveStory(String workspaceId, String url) {
+        int count = getCount(workspaceId, "stories");
+        logger.info("[Story更新总数：]" + count);
         int totalPage;
-        if(count>200){
-            totalPage = (count/200)+1;
-            for(int i =1; i<=totalPage; i++){
+        if (count > 200) {
+            totalPage = (count / 200) + 1;
+            for (int i = 1; i <= totalPage; i++) {
                 url += "&limit=200&page=" + i;
                 //发送请求
                 HttpEntity<String> ans;  //body响应数据接收类型
@@ -345,15 +342,15 @@ public class InitController {
                         new HttpEntity<>(null, headers),   //加入headers
                         String.class);
                 String gson = ans.getBody();
-                Gson g =new GsonBuilder()
+                Gson g = new GsonBuilder()
                         .setDateFormat("yyyy-MM-dd HH:mm:ss")
                         .create();
-                ResultEntity vo =  g.fromJson(gson, ResultEntity.class);
-                if(vo.getData().size()>0) {
-                    for(LinkedTreeMap map : vo.getData()){
+                ResultEntity vo = g.fromJson(gson, ResultEntity.class);
+                if (vo.getData().size() > 0) {
+                    for (LinkedTreeMap map : vo.getData()) {
                         String gsonStr;
-                        gsonStr = g.toJson( map.get("Story"));
-                        logger.info("[Story]"+gsonStr);
+                        gsonStr = g.toJson(map.get("Story"));
+                        logger.info("[Story]" + gsonStr);
                         Story story = g.fromJson(gsonStr, Story.class);
                         story.setPriority(SPriorityEnum.getValue(story.getPriority()));
 
@@ -366,30 +363,29 @@ public class InitController {
                         Optional<Workspace> workspace = workspaceRepository.findById(story.getWorkspace_id());
                         workspace.ifPresent(value -> story.setWorkspace_name(value.getName()));
 
-                        StatusMap statusMap = statusMapRepository.findByCodeAndSystemAndWorkspaceId(story.getStatus(),"story",story.getWorkspace_id());
-                        if(nonNull(statusMap)){
+                        StatusMap statusMap = statusMapRepository.findByCodeAndSystemAndWorkspaceId(story.getStatus(), "story", story.getWorkspace_id());
+                        if (nonNull(statusMap)) {
                             story.setStatus(statusMap.getName());
                         }
                         storyRepository.save(story);
                     }
                 }
             }
-        } else
-        {
-            url = url+"&limit=200";
+        } else {
+            url = url + "&limit=200";
             //发送请求
             HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,   //GET请求
                     new HttpEntity<>(null, headers),   //加入headers
                     String.class);  //body响应数据接收类型
             String gson = ans.getBody();
-            Gson g =new GsonBuilder()
+            Gson g = new GsonBuilder()
                     .setDateFormat("yyyy-MM-dd HH:mm:ss")
                     .create();
-            ResultEntity vo =  g.fromJson(gson, ResultEntity.class);
-            if(vo.getData().size()>0) {
-                for(LinkedTreeMap map : vo.getData()){
-                    String gsonStr = g.toJson( map.get("Story"));
-                    logger.info("[Story]"+gsonStr);
+            ResultEntity vo = g.fromJson(gson, ResultEntity.class);
+            if (vo.getData().size() > 0) {
+                for (LinkedTreeMap map : vo.getData()) {
+                    String gsonStr = g.toJson(map.get("Story"));
+                    logger.info("[Story]" + gsonStr);
                     Story story = g.fromJson(gsonStr, Story.class);
                     story.setPriority(SPriorityEnum.getValue(story.getPriority()));
                     Optional<Iteration> iteration = iterationRepository.findById(story.getIteration_id());
@@ -398,8 +394,8 @@ public class InitController {
                     categories.ifPresent(storyCategories -> story.setCategory_name(storyCategories.getName()));
                     Optional<Workspace> workspace = workspaceRepository.findById(story.getWorkspace_id());
                     workspace.ifPresent(value -> story.setWorkspace_name(value.getName()));
-                    StatusMap statusMap = statusMapRepository.findByCodeAndSystemAndWorkspaceId(story.getStatus(),"story",story.getWorkspace_id());
-                    if(nonNull(statusMap)){
+                    StatusMap statusMap = statusMapRepository.findByCodeAndSystemAndWorkspaceId(story.getStatus(), "story", story.getWorkspace_id());
+                    if (nonNull(statusMap)) {
                         story.setStatus(statusMap.getName());
                     }
                     storyRepository.save(story);
@@ -408,40 +404,40 @@ public class InitController {
         }
     }
 
-    private int getCount(final String workspaceId,final String type){
-        String url = "https://api.tapd.cn/"+type+"/count?workspace_id="+workspaceId;
+    private int getCount(final String workspaceId, final String type) {
+        String url = "https://api.tapd.cn/" + type + "/count?workspace_id=" + workspaceId;
         //发送请求
         HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,   //GET请求
                 new HttpEntity<>(null, headers),   //加入headers
                 String.class);  //body响应数据接收类型
         String gson = ans.getBody();
         logger.info(gson);
-        Gson g =new GsonBuilder()
+        Gson g = new GsonBuilder()
                 .setDateFormat("yyyy-MM-dd HH:mm:ss")
                 .create();
-        ResultCountEntity vo =  g.fromJson(gson, ResultCountEntity.class);
+        ResultCountEntity vo = g.fromJson(gson, ResultCountEntity.class);
         Map map;
         map = vo.getData();
         int count;
-        count = ((Double)map.get("count")).intValue();
+        count = ((Double) map.get("count")).intValue();
         return count;
     }
 
-    public void initWorkspace(){
-        String url = "https://api.tapd.cn/workspaces/projects?company_id="+companyId;
+    public void initWorkspace() {
+        String url = "https://api.tapd.cn/workspaces/projects?company_id=" + companyId;
         //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
         HttpHeaders headers = new HttpHeaders();
-        headers.set("authorization","Basic " + Base64.getEncoder().encodeToString("XFzFJy1k:1BF133BB-0B17-E7C1-A04A-067C761B353C".getBytes()));
+        headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString("XFzFJy1k:1BF133BB-0B17-E7C1-A04A-067C761B353C".getBytes()));
         //发送请求
         HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,   //GET请求
                 new HttpEntity<>(null, headers),   //加入headers
                 String.class);  //body响应数据接收类型
         String gson = ans.getBody();
-        Gson g =new GsonBuilder()
+        Gson g = new GsonBuilder()
                 .setDateFormat("yyyy-MM-dd HH:mm:ss")
                 .create();
-        ResultEntity vo =  g.fromJson(gson, ResultEntity.class);
-        if(vo.getData().size()>0) {
+        ResultEntity vo = g.fromJson(gson, ResultEntity.class);
+        if (vo.getData().size() > 0) {
             vo.getData().stream().map(map -> g.toJson(map.get("Workspace"))).forEach(gsonStr -> {
                 System.out.println(gsonStr);
                 Workspace bug = g.fromJson(gsonStr, Workspace.class);
@@ -451,9 +447,9 @@ public class InitController {
         }
     }
 
-    public void initStoryCategories(){
+    public void initStoryCategories() {
         String[] idsStr = ids.split(",");
-        for(String workspaceId : idsStr) {
+        for (String workspaceId : idsStr) {
             String url = "https://api.tapd.cn/story_categories?workspace_id=" + workspaceId;
             //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
             HttpHeaders headers = new HttpHeaders();
@@ -469,7 +465,7 @@ public class InitController {
                             new HttpEntity<>(null, headers),   //加入headers
                             String.class);  //body响应数据接收类型
                     String gson = ans.getBody();
-                    Gson g =new GsonBuilder()
+                    Gson g = new GsonBuilder()
                             .setDateFormat("yyyy-MM-dd HH:mm:ss")
                             .create();
                     ResultEntity vo = g.fromJson(gson, ResultEntity.class);
@@ -488,7 +484,7 @@ public class InitController {
                         new HttpEntity<>(null, headers),   //加入headers
                         String.class);  //body响应数据接收类型
                 String gson = ans.getBody();
-                Gson g =new GsonBuilder()
+                Gson g = new GsonBuilder()
                         .setDateFormat("yyyy-MM-dd HH:mm:ss")
                         .create();
                 ResultEntity vo = g.fromJson(gson, ResultEntity.class);
@@ -503,11 +499,11 @@ public class InitController {
         }
     }
 
-    private int getCount(final String workspaceId){
+    private int getCount(final String workspaceId) {
         AtomicReference<String> url = new AtomicReference<>("https://api.tapd.cn/story_categories/count?workspace_id=" + workspaceId);
         //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
         HttpHeaders headers = new HttpHeaders();
-        headers.set("authorization","Basic " +Base64.getEncoder().encodeToString("XFzFJy1k:1BF133BB-0B17-E7C1-A04A-067C761B353C".getBytes()));
+        headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString("XFzFJy1k:1BF133BB-0B17-E7C1-A04A-067C761B353C".getBytes()));
         //发送请求
         HttpEntity<String> ans = restTemplate.exchange(url.get(), HttpMethod.GET,   //GET请求
                 new HttpEntity<>(null, headers),   //加入headers
@@ -515,11 +511,11 @@ public class InitController {
         System.out.println(ans);
         String gson = ans.getBody();
         System.out.println(gson);
-        Gson g =new GsonBuilder()
+        Gson g = new GsonBuilder()
                 .setDateFormat("yyyy-MM-dd HH:mm:ss")
                 .create();
-        ResultCountEntity vo =  g.fromJson(gson, ResultCountEntity.class);
+        ResultCountEntity vo = g.fromJson(gson, ResultCountEntity.class);
         Map map = vo.getData();
-        return ((Double)map.get("count")).intValue();
+        return ((Double) map.get("count")).intValue();
     }
 }

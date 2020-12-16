@@ -13,6 +13,6 @@ public interface IterationRepository extends CrudRepository<Iteration, Long> {
 
     @Transactional
     @Modifying
-    @Query(value = "truncate table t_iterations",nativeQuery = true)
+    @Query(value = "truncate table t_iterations", nativeQuery = true)
     public void truncateIteration();
 }

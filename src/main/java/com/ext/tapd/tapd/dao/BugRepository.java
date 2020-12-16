@@ -13,6 +13,6 @@ public interface BugRepository extends CrudRepository<Bug, Integer> {
 
     @Transactional
     @Modifying
-    @Query(value = "truncate table t_bugs",nativeQuery = true)
+    @Query(value = "truncate table t_bugs", nativeQuery = true)
     public void truncateBugs();
 }
