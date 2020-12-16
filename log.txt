@@ -1,0 +1,25 @@
+2020-12-16 15:41:36.523  INFO 104108 --- [main] com.ext.tapd.tapd.TapdApplication        : Starting TapdApplication on SZLX with PID 104108 (D:\workspace\test\tapd-synchro\target\classes started by lx in D:\workspace\test\tapd-synchro)
+2020-12-16 15:41:36.531 DEBUG 104108 --- [main] com.ext.tapd.tapd.TapdApplication        : Running with Spring Boot v2.3.5.RELEASE, Spring v5.2.10.RELEASE
+2020-12-16 15:41:36.531  INFO 104108 --- [main] com.ext.tapd.tapd.TapdApplication        : No active profile set, falling back to default profiles: default
+2020-12-16 15:41:37.402  INFO 104108 --- [main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFERRED mode.
+2020-12-16 15:41:37.491  INFO 104108 --- [main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 78ms. Found 7 JPA repository interfaces.
+2020-12-16 15:41:37.906  INFO 104108 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8989 (http)
+2020-12-16 15:41:37.913  INFO 104108 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2020-12-16 15:41:37.914  INFO 104108 --- [main] org.apache.catalina.core.StandardEngine  : Starting Servlet engine: [Apache Tomcat/9.0.39]
+2020-12-16 15:41:37.994  INFO 104108 --- [main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2020-12-16 15:41:37.994  INFO 104108 --- [main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1375 ms
+2020-12-16 15:41:38.129  INFO 104108 --- [main] o.s.s.concurrent.ThreadPoolTaskExecutor  : Initializing ExecutorService 'applicationTaskExecutor'
+2020-12-16 15:41:38.136  INFO 104108 --- [main] o.s.s.c.ThreadPoolTaskScheduler          : Initializing ExecutorService 'taskScheduler'
+2020-12-16 15:41:38.142  INFO 104108 --- [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2020-12-16 15:41:38.383  INFO 104108 --- [main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2020-12-16 15:41:38.418  INFO 104108 --- [task-1] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2020-12-16 15:41:38.460  INFO 104108 --- [task-1] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 5.4.22.Final
+2020-12-16 15:41:38.480  WARN 104108 --- [main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2020-12-16 15:41:38.685  INFO 104108 --- [task-1] o.hibernate.annotations.common.Version   : HCANN000001: Hibernate Commons Annotations {5.1.0.Final}
+2020-12-16 15:41:38.804  INFO 104108 --- [task-1] org.hibernate.dialect.Dialect            : HHH000400: Using dialect: org.hibernate.dialect.MySQL57Dialect
+2020-12-16 15:41:38.898  INFO 104108 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port(s): 8989 (http) with context path ''
+2020-12-16 15:41:38.900  INFO 104108 --- [main] DeferredRepositoryInitializationListener : Triggering deferred initialization of Spring Data repositories…
+2020-12-16 15:41:39.428  INFO 104108 --- [task-1] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000490: Using JtaPlatform implementation: [org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform]
+2020-12-16 15:41:39.435  INFO 104108 --- [task-1] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2020-12-16 15:41:39.713  INFO 104108 --- [main] DeferredRepositoryInitializationListener : Spring Data repositories initialized!
+2020-12-16 15:41:39.722  INFO 104108 --- [main] com.ext.tapd.tapd.TapdApplication        : Started TapdApplication in 3.575 seconds (JVM running for 4.507)
