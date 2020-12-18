@@ -10,6 +10,7 @@ import com.google.gson.GsonBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -32,6 +33,8 @@ public class BaseDataScheduleTask {
     private StatusMapRepository statusMapRepository;
     @Autowired
     private WorkspaceRepository workspaceRepository;
+    @Value("${tapd.account}")
+    private String account;
 
     @Scheduled(cron = "${cron:0 0 0/1 * * ?}") //每1小时执行一次
     @Async
@@ -45,7 +48,7 @@ public class BaseDataScheduleTask {
                 String url = String.format("https://api.tapd.cn/workflows/status_map?system=%s&workspace_id=%d", system, workspace.getId());
                 //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
                 HttpHeaders headers = new HttpHeaders();
-                headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString("XFzFJy1k:1BF133BB-0B17-E7C1-A04A-067C761B353C".getBytes()));
+                headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString(account.getBytes()));
                 //发送请求
                 HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,   //GET请求
                         new HttpEntity<>(null, headers),   //加入headers

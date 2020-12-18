@@ -17,6 +17,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
@@ -49,11 +50,15 @@ public class InitController {
     private WorkspaceRepository workspaceRepository;
     @Autowired
     private StatusMapRepository statusMapRepository;
+    @Autowired
+    private TestPlanRepository testPlanRepository;
 
     @Value("${company.id}")
     private String companyId;
     @Value("${workspace.ids}")
     private String ids;
+    @Value("${tapd.account}")
+    private String account;
     private final HttpHeaders headers = new HttpHeaders();
 
     @RequestMapping(value = "/initTable", method = RequestMethod.GET)
@@ -62,6 +67,7 @@ public class InitController {
     }
 
     @RequestMapping(value = "/initData", method = RequestMethod.GET)
+    @ResponseBody
     public String initData() {
         logger.info("=======初始化数据表开始=======");
         logger.info("=========================>清空公司表======================");
@@ -89,6 +95,12 @@ public class InitController {
         return "全量更新完成";
     }
 
+    @RequestMapping(value = "/kaishi", method = RequestMethod.GET)
+    @ResponseBody
+    public String kaishi(Model model){
+        return "====kaishi====";
+    }
+
     public void initStatusMap() {
         List<Workspace> workspaces;
         workspaces = (List<Workspace>) workspaceRepository.findAll();
@@ -100,7 +112,7 @@ public class InitController {
             Arrays.stream(systems).forEach(system -> {
                 AtomicReference<String> url = new AtomicReference<>("https://api.tapd.cn/workflows/status_map?system=" + system + "&workspace_id=" + workspace.getId());
                 HttpHeaders headers = new HttpHeaders();
-                headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString("XFzFJy1k:1BF133BB-0B17-E7C1-A04A-067C761B353C".getBytes()));
+                headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString(account.getBytes()));
                 HttpEntity<String> ans = restTemplate.exchange(url.get(), HttpMethod.GET,   //GET请求
                         new HttpEntity<>(null, headers),   //加入headers
                         String.class);  //body响应数据接收类型
@@ -130,7 +142,7 @@ public class InitController {
         for (String workspaceId : idsStr) {
             String url = "https://api.tapd.cn/" + type + "?workspace_id=" + workspaceId;
             //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
-            headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString("XFzFJy1k:1BF133BB-0B17-E7C1-A04A-067C761B353C".getBytes()));
+            headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString(account.getBytes()));
 
             switch (type) {
                 case "bugs":
@@ -169,8 +181,7 @@ public class InitController {
                         .create();
                 ResultEntity vo = g.fromJson(gson, ResultEntity.class);
                 if (vo.getData().size() > 0) {
-                    for (LinkedTreeMap map : vo.getData()) {
-                        String gsonStr = g.toJson(map.get("Bug"));
+                    vo.getData().stream().map(map -> g.toJson(map.get("Bug"))).forEach(gsonStr -> {
                         logger.info("[BUG:]" + gsonStr);
                         Bug bug = g.fromJson(gsonStr, Bug.class);
                         bug.setPriority(PriorityEnum.getValue(bug.getPriority()));
@@ -185,7 +196,7 @@ public class InitController {
                             bug.setStatus(statusMap.getName());
                         }
                         bugRepository.save(bug);
-                    }
+                    });
                 }
             }
         } else {
@@ -235,14 +246,13 @@ public class InitController {
                         .create();
                 ResultEntity vo = g.fromJson(gson, ResultEntity.class);
                 if (vo.getData().size() > 0) {
-                    for (LinkedTreeMap map : vo.getData()) {
-                        String gsonStr = g.toJson(map.get("Iteration"));
+                    vo.getData().stream().map(map -> g.toJson(map.get("Iteration"))).forEach(gsonStr -> {
                         logger.info("[Iteration:]" + gsonStr);
                         Iteration iteration = g.fromJson(gsonStr, Iteration.class);
                         Optional<Workspace> workspace = workspaceRepository.findById(iteration.getWorkspace_id());
                         workspace.ifPresent(value -> iteration.setWorkspace_name(value.getName()));
                         iterationRepository.save(iteration);
-                    }
+                    });
                 }
             }
         } else {
@@ -257,14 +267,13 @@ public class InitController {
                     .create();
             ResultEntity vo = g.fromJson(gson, ResultEntity.class);
             if (vo.getData().size() > 0) {
-                for (LinkedTreeMap map : vo.getData()) {
-                    String gsonStr = g.toJson(map.get("Iteration"));
+                vo.getData().stream().map(map -> g.toJson(map.get("Iteration"))).forEach(gsonStr -> {
                     logger.info("[Iteration]" + gsonStr);
                     Iteration iteration = g.fromJson(gsonStr, Iteration.class);
                     Optional<Workspace> workspace = workspaceRepository.findById(iteration.getWorkspace_id());
                     workspace.ifPresent(value -> iteration.setWorkspace_name(value.getName()));
                     iterationRepository.save(iteration);
-                }
+                });
             }
         }
     }
@@ -287,8 +296,7 @@ public class InitController {
                         .create();
                 ResultEntity vo = g.fromJson(gson, ResultEntity.class);
                 if (vo.getData().size() > 0) {
-                    for (LinkedTreeMap map : vo.getData()) {
-                        String gsonStr = g.toJson(map.get("Task"));
+                    vo.getData().stream().map(map -> g.toJson(map.get("Task"))).forEach(gsonStr -> {
                         logger.info("[Task]" + gsonStr);
                         Task task = g.fromJson(gsonStr, Task.class);
                         task.setStatus(StatusEnum.getValue(task.getStatus()));
@@ -301,7 +309,7 @@ public class InitController {
                         Optional<Workspace> workspace = workspaceRepository.findById(task.getWorkspace_id());
                         workspace.ifPresent(value -> task.setWorkspace_name(value.getName()));
                         taskRepository.save(task);
-                    }
+                    });
                 }
             }
         } else {
@@ -390,8 +398,7 @@ public class InitController {
                     .create();
             ResultEntity vo = g.fromJson(gson, ResultEntity.class);
             if (vo.getData().size() > 0) {
-                for (LinkedTreeMap map : vo.getData()) {
-                    String gsonStr = g.toJson(map.get("Story"));
+                vo.getData().stream().map(map -> g.toJson(map.get("Story"))).forEach(gsonStr -> {
                     logger.info("[Story]" + gsonStr);
                     Story story = g.fromJson(gsonStr, Story.class);
                     story.setPriority(SPriorityEnum.getValue(story.getPriority()));
@@ -406,7 +413,7 @@ public class InitController {
                         story.setStatus(statusMap.getName());
                     }
                     storyRepository.save(story);
-                }
+                });
             }
         }
     }
@@ -423,8 +430,7 @@ public class InitController {
                 .setDateFormat("yyyy-MM-dd HH:mm:ss")
                 .create();
         ResultCountEntity vo = g.fromJson(gson, ResultCountEntity.class);
-        Map map;
-        map = vo.getData();
+        Map map = vo.getData();
         int count;
         count = ((Double) map.get("count")).intValue();
         return count;
@@ -434,7 +440,7 @@ public class InitController {
         String url = String.format("https://api.tapd.cn/workspaces/projects?company_id=%s", companyId);
         //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
         HttpHeaders headers = new HttpHeaders();
-        headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString("XFzFJy1k:1BF133BB-0B17-E7C1-A04A-067C761B353C".getBytes()));
+        headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString(account.getBytes()));
         //发送请求
         HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,   //GET请求
                 new HttpEntity<>(null, headers),   //加入headers
@@ -461,7 +467,7 @@ public class InitController {
             String url = "https://api.tapd.cn/story_categories?workspace_id=" + workspaceId;
             //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
             HttpHeaders headers = new HttpHeaders();
-            headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString("XFzFJy1k:1BF133BB-0B17-E7C1-A04A-067C761B353C".getBytes()));
+            headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString(account.getBytes()));
             int count = getCount(workspaceId);
             int totalPage;
             if (count > 200) {
@@ -511,7 +517,7 @@ public class InitController {
         AtomicReference<String> url = new AtomicReference<>("https://api.tapd.cn/story_categories/count?workspace_id=" + workspaceId);
         //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
         HttpHeaders headers = new HttpHeaders();
-        headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString("XFzFJy1k:1BF133BB-0B17-E7C1-A04A-067C761B353C".getBytes()));
+        headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString(account.getBytes()));
         //发送请求
         HttpEntity<String> ans = restTemplate.exchange(url.get(), HttpMethod.GET,   //GET请求
                 new HttpEntity<>(null, headers),   //加入headers

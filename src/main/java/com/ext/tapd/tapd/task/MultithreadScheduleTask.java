@@ -47,6 +47,8 @@ public class MultithreadScheduleTask {
 
     @Value("${workspace.ids}")
     private String ids;
+    @Value("${tapd.account}")
+    private String account;
     private HttpHeaders headers = new HttpHeaders();
 
 
@@ -93,7 +95,7 @@ public class MultithreadScheduleTask {
         for (String workspaceId : idsStr) {
             AtomicReference<String> url = new AtomicReference<>("https://api.tapd.cn/" + type + "?workspace_id=" + workspaceId + "&modified=>" + modified);
             //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
-            headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString("XFzFJy1k:1BF133BB-0B17-E7C1-A04A-067C761B353C".getBytes()));
+            headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString(account.getBytes()));
 
             switch (type) {
                 case "bugs":

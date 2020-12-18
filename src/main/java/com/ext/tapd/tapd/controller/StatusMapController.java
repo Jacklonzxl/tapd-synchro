@@ -8,6 +8,7 @@ import com.ext.tapd.tapd.pojo.Workspace;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -30,6 +31,9 @@ public class StatusMapController {
     @Autowired
     private WorkspaceRepository workspaceRepository;
 
+    @Value("${tapd.account}")
+    private String account;
+
     //初始化task
     @RequestMapping(value = "/initStatusmap", method = RequestMethod.GET)
     public String initTask() {
@@ -40,7 +44,7 @@ public class StatusMapController {
                 String url = "https://api.tapd.cn/workflows/status_map?system=" + system + "&workspace_id=" + workspace.getId();
                 //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
                 HttpHeaders headers = new HttpHeaders();
-                headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString("XFzFJy1k:1BF133BB-0B17-E7C1-A04A-067C761B353C".getBytes()));
+                headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString(account.getBytes()));
                 //发送请求
                 HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,   //GET请求
                         new HttpEntity<>(null, headers),   //加入headers

@@ -5,7 +5,19 @@
     <title>初始化数据</title>
 </head>
 <body>
-    <b th:text="helloword"/>
-<!--    <button style="width: 220px;height: 110px;" type="button" name="初始化数据" value="初始化数据"/>-->
+    <button type="button" style="height: 40px;width: 100px" name="初始化数据" onclick="initdata()">初始化数据 </button>
+    <p>==================初始化数据==========================</p>
 </body>
+<script src="/js/jquery-3.5.1.min.js" th:href></script>
+<script type="text/javascript" th:inline="javascript">
+    function initdata() {
+        $.ajax({
+            method : "get",
+            url: "/init/kaishi",
+            success : function () {
+
+            }
+        })
+    }
+</script>
 </html>
