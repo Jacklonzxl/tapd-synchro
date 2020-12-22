@@ -225,7 +225,7 @@ public class TestPlanController {
     }
 
     private String getCoverage(Long testPlanId, int storyCount) {
-        if(storyCount==0){
+        if (storyCount == 0) {
             return "0%";
         }
         int storynum = tcaseRepository.countByTestPlanId(testPlanId);
@@ -236,12 +236,12 @@ public class TestPlanController {
     }
 
     private String getPassRate(Implementation implementation) {
-        if((implementation.getTcase_count()-implementation.getStatus_counter().getUnexecuted())<=0){
+        if ((implementation.getTcase_count() - implementation.getStatus_counter().getUnexecuted()) <= 0) {
             return "0%";
         }
         NumberFormat numberFormat = NumberFormat.getInstance();
         numberFormat.setMaximumFractionDigits(2);
-        String result = numberFormat.format((float) implementation.getStatus_counter().getPass() / (float) (implementation.getTcase_count()-implementation.getStatus_counter().getUnexecuted()) * 100);
+        String result = numberFormat.format((float) implementation.getStatus_counter().getPass() / (float) (implementation.getTcase_count() - implementation.getStatus_counter().getUnexecuted()) * 100);
         return result + "%";
     }
 }

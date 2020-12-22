@@ -16,8 +16,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.client.RestTemplate;
 
 import java.text.NumberFormat;
@@ -47,9 +45,10 @@ public class TestPlanScheduleTask {
     @Value("${tapd.account}")
     private String account;
 
-    @Scheduled(cron = "${cron:0 0 0/2 * * ?}") //每2小时执行一次
+    @Scheduled(cron = "${cron:0 0/30 0/1 * * ?}") //每2小时执行一次
     @Async
-    public void task() {
+    public void testPlan() {
+        logger.info("===============开始同步测试计划=====================");
         initTask();
         initRelaxtion();
         try {
@@ -57,6 +56,7 @@ public class TestPlanScheduleTask {
         } catch (ParseException e) {
             e.printStackTrace();
         }
+        logger.info("===============同步测试计划完成=====================");
     }
 
 
@@ -188,6 +188,7 @@ public class TestPlanScheduleTask {
         int count = new Double((Double) map.get("count")).intValue();
         return count;
     }
+
     /**
      * 初始化测试需求关系表
      */
