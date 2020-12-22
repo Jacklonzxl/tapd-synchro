@@ -20,12 +20,12 @@ public class TestStatistics implements Serializable {
 
     @Column(name = "plan_date")
     private Date planDate;
-
+    //覆盖率
     private String coverage;
-
+    //执行率
     @Column(name = "implement_rate")
     private String implementRate;
-
+    //通过率
     @Column(name = "pass_rate")
     private String passRate;
 
