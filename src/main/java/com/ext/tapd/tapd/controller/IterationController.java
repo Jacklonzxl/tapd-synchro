@@ -23,6 +23,9 @@ import java.util.Base64;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * 更新迭代表
+ */
 @RestController
 @RequestMapping("/iterations")
 public class IterationController {
@@ -41,7 +44,7 @@ public class IterationController {
     //初始化task
     @RequestMapping(value = "/initIterations", method = RequestMethod.GET)
     public String initIterations() {
-
+        iterationRepository.truncateIteration();
         String[] idsStr = ids.split(",");
         for (String workspaceId : idsStr) {
             String url = "https://api.tapd.cn/iterations?workspace_id=" + workspaceId;
@@ -97,7 +100,7 @@ public class IterationController {
                 }
             }
         }
-        return "执行成功";
+        return "迭代表更新成功";
     }
 
     private int getCount(final String workspaceId) {

@@ -27,7 +27,9 @@ import java.util.Base64;
 import java.util.Map;
 import java.util.Optional;
 
-
+/**
+ * 更新任务表
+ */
 @RestController
 @RequestMapping("/task")
 public class TaskController {
@@ -51,6 +53,7 @@ public class TaskController {
     //初始化task
     @RequestMapping(value = "/initTask", method = RequestMethod.GET)
     public String initTask() {
+        taskRepository.truncateTable();
         String[] idsStr = ids.split(",");
         for (String workspaceId : idsStr) {
             String url = "https://api.tapd.cn/tasks?workspace_id=" + workspaceId;

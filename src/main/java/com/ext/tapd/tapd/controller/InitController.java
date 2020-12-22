@@ -79,26 +79,20 @@ public class InitController {
         logger.info("=========================>清空状态表======================");
         statusMapRepository.truncateStatusMap();
         initStatusMap();
-        logger.info("=========================>清空任务表======================");
-        taskRepository.truncateTable();
-        excuteTask("tasks");
-        logger.info("=========================>清空缺陷表======================");
-        bugRepository.truncateBugs();
-        excuteTask("bugs");
-        logger.info("=========================>清空需求表======================");
-        storyRepository.truncateStories();
-        excuteTask("stories");
-        logger.info("=========================>清空迭代表======================");
-        iterationRepository.truncateIteration();
-        excuteTask("iterations");
+//        logger.info("=========================>清空任务表======================");
+//        taskRepository.truncateTable();
+//        excuteTask("tasks");
+//        logger.info("=========================>清空缺陷表======================");
+//        bugRepository.truncateBugs();
+//        excuteTask("bugs");
+//        logger.info("=========================>清空需求表======================");
+//        storyRepository.truncateStories();
+//        excuteTask("stories");
+//        logger.info("=========================>清空迭代表======================");
+//        iterationRepository.truncateIteration();
+//        excuteTask("iterations");
         logger.info("=======初始化数据表结束=======");
-        return "全量更新完成";
-    }
-
-    @RequestMapping(value = "/kaishi", method = RequestMethod.GET)
-    @ResponseBody
-    public String kaishi(Model model){
-        return "====kaishi====";
+        return "基础数据更新完成";
     }
 
     public void initStatusMap() {

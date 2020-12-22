@@ -26,6 +26,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+/**
+ * 更新缺陷表
+ */
 @RestController
 @RequestMapping("/bugs")
 public class BugController {
@@ -42,17 +45,20 @@ public class BugController {
 
     @Value("${workspace.ids}")
     private String ids;
+    @Value("${tapd.account}")
+    private String account;
 
 
     //初始化task
     @RequestMapping(value = "/initBugs", method = RequestMethod.GET)
     public String initBugs() {
+        bugRepository.truncateBugs();
         String[] idsStr = ids.split(",");
         for (String workspaceId : idsStr) {
             String url = "https://api.tapd.cn/bugs?workspace_id=" + workspaceId;
             //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
             HttpHeaders headers = new HttpHeaders();
-            headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString("XFzFJy1k:1BF133BB-0B17-E7C1-A04A-067C761B353C".getBytes()));
+            headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString(account.getBytes()));
             int count = getCount(workspaceId);
             int totalPage = 0;
             if (count > 200) {
@@ -127,7 +133,7 @@ public class BugController {
         String url = "https://api.tapd.cn/bugs/count?workspace_id=" + workspaceId;
         //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
         HttpHeaders headers = new HttpHeaders();
-        headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString("XFzFJy1k:1BF133BB-0B17-E7C1-A04A-067C761B353C".getBytes()));
+        headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString(account.getBytes()));
         //发送请求
         HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,   //GET请求
                 new HttpEntity<>(null, headers),   //加入headers

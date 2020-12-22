@@ -21,6 +21,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+/**
+ * 更新需求表
+ */
 @RestController
 @RequestMapping("/storie")
 public class StorieController {
@@ -45,7 +48,7 @@ public class StorieController {
     //初始化task
     @RequestMapping(value = "/initStorie", method = RequestMethod.GET)
     public String initStorie() {
-
+        storyRepository.truncateStories();
         String[] idsStr = ids.split(",");
         for (String workspaceId : idsStr) {
             String url = "https://api.tapd.cn/stories?workspace_id=" + workspaceId;
