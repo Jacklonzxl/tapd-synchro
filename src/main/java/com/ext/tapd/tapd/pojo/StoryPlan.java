@@ -16,6 +16,11 @@ public class StoryPlan implements Serializable {
 
     @Column(name = "iteration_name")
     private String iterationName;
+    @Column(name = "story_type")
+    private String storyType;
+    @Column(name = "task_type")
+    private String taskType;
+    private String total_finish;
     private String development;
     private BigInteger task_num;
     private String requirements_review;
@@ -50,6 +55,30 @@ public class StoryPlan implements Serializable {
 
     public void setIterationName(String iterationName) {
         this.iterationName = iterationName;
+    }
+
+    public String getStoryType() {
+        return storyType;
+    }
+
+    public void setStoryType(String storyType) {
+        this.storyType = storyType;
+    }
+
+    public String getTaskType() {
+        return taskType;
+    }
+
+    public void setTaskType(String taskType) {
+        this.taskType = taskType;
+    }
+
+    public String getTotal_finish() {
+        return total_finish;
+    }
+
+    public void setTotal_finish(String total_finish) {
+        this.total_finish = total_finish;
     }
 
     public BigInteger getTask_num() {

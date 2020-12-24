@@ -1,9 +1,5 @@
 package com.ext.tapd.tapd.pojo;
 
-import com.google.gson.internal.LinkedTreeMap;
-
-import java.util.List;
-
 public class ResultImplementionEntity {
     private Integer status;
     private Implementation data;

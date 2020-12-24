@@ -1,29 +1,33 @@
-package com.ext.tapd.tapd.controller;
+package com.ext.tapd.tapd.task;
 
 import com.ext.tapd.tapd.dao.StoryPlanRepository;
 import com.ext.tapd.tapd.dao.TaskRepository;
 import com.ext.tapd.tapd.pojo.StoryPlan;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
 import org.thymeleaf.util.StringUtils;
 
 import java.math.BigInteger;
+import java.text.NumberFormat;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
-@RestController
-@RequestMapping("/storiePlan")
-public class StoriePlanController {
+@Component
+@EnableScheduling
+public class StoriePlanScheduleTask {
 
     @Autowired
     private TaskRepository taskRepository;
     @Autowired
     private StoryPlanRepository storyPlanRepository;
 
-    @RequestMapping(value = "/initTestPlan", method = RequestMethod.GET)
+    @Scheduled(cron = "${cron:0 0 0-12 * * ? }") //每1小时40分执行一次
+    @Async
     public String initTask() {
         List<Map> list = taskRepository.findIterationName();
         for (Map map : list) {

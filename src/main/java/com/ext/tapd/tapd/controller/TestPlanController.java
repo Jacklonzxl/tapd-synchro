@@ -137,9 +137,9 @@ public class TestPlanController {
                 if (startDate.compareTo(today) == 0 && Objects.nonNull(temp)) {
                     temp = statisticsRepository.findByNameAndPlanDate(testPlan.getName(), startDate);
                     Implementation implementation = getRate(testPlan.getId(), testPlan.getWorkspace_id());
-                    temp.setCoverage(getCoverage(testPlan.getId(), implementation.getStory_count()));
-                    temp.setImplementRate(implementation.getExecuted_rate());
-                    temp.setPassRate(getPassRate(implementation));
+                    temp.setCoverage(transaleFloat(getCoverage(testPlan.getId(), implementation.getStory_count())));
+                    temp.setImplementRate(transaleFloat(implementation.getExecuted_rate()));
+                    temp.setPassRate(transaleFloat(getPassRate(implementation)));
                     statisticsRepository.save(temp);
                 }
                 if (temp == null) {
@@ -160,9 +160,9 @@ public class TestPlanController {
                 } else if (startDate.compareTo(today) == 0) {
                     temp = statisticsRepository.findByNameAndPlanDate(testPlan.getName(), startDate);
                     Implementation implementation = getRate(testPlan.getId(), testPlan.getWorkspace_id());
-                    temp.setCoverage(getCoverage(testPlan.getId(), implementation.getStory_count()));
-                    temp.setImplementRate(implementation.getExecuted_rate());
-                    temp.setPassRate(getPassRate(implementation));
+                    temp.setCoverage(transaleFloat(getCoverage(testPlan.getId(), implementation.getStory_count())));
+                    temp.setImplementRate(transaleFloat(implementation.getExecuted_rate()));
+                    temp.setPassRate(transaleFloat(getPassRate(implementation)));
                     statisticsRepository.save(temp);
                 }
             }
@@ -243,5 +243,14 @@ public class TestPlanController {
         numberFormat.setMaximumFractionDigits(2);
         String result = numberFormat.format((float) implementation.getStatus_counter().getPass() / (float) (implementation.getTcase_count() - implementation.getStatus_counter().getUnexecuted()) * 100);
         return result + "%";
+    }
+
+    private String transaleFloat(String present) {
+        if (present.contains("%")) {
+            present = present.replaceAll("%", "");
+            Float f = Float.valueOf(present);
+            return String.valueOf(f/100);
+        }
+       return "0";
     }
 }
