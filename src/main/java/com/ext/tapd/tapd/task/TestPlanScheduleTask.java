@@ -131,6 +131,7 @@ public class TestPlanScheduleTask {
      * 初始化测试计划表
      */
     private void initTask() {
+        testPlanRepository.truncateTable();
         List<Workspace> workspaces = (List<Workspace>) workspaceRepository.findAll();
         for (Workspace workspace : workspaces) {
             String url = "https://api.tapd.cn/test_plans?workspace_id=" + workspace.getId();
@@ -205,6 +206,7 @@ public class TestPlanScheduleTask {
      * 初始化测试需求关系表
      */
     public String initRelaxtion() {
+        tcaseRepository.truncateTable();
         List<Story> stories = (List<Story>) storyRepository.findAll();
         for (Story story : stories) {
             String url = "https://api.tapd.cn/stories/get_story_tcase?workspace_id=" + story.getWorkspace_id() + "&story_id=" + story.getId();

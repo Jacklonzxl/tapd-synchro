@@ -46,6 +46,7 @@ public class TestPlanController {
 
     @RequestMapping(value = "/initTestPlan", method = RequestMethod.GET)
     public String initTask() {
+        testPlanRepository.truncateTable();
         List<Workspace> workspaces = (List<Workspace>) workspaceRepository.findAll();
         for (Workspace workspace : workspaces) {
             String url = "https://api.tapd.cn/test_plans?workspace_id=" + workspace.getId();
@@ -204,6 +205,7 @@ public class TestPlanController {
 
     @RequestMapping(value = "/getRelaxtion", method = RequestMethod.GET)
     public String getRelaxtion() {
+        tcaseRepository.truncateTable();
         List<Story> stories = (List<Story>) storyRepository.findAll();
         for (Story story : stories) {
             String url = "https://api.tapd.cn/stories/get_story_tcase?workspace_id=" + story.getWorkspace_id() + "&story_id=" + story.getId();
