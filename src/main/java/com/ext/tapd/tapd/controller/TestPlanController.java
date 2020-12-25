@@ -129,6 +129,18 @@ public class TestPlanController {
             TestPlan testPlan = (TestPlan) iterator.next();
             Date startDate = testPlan.getStart_date();
             Date endDate = testPlan.getEnd_date();
+
+            //修改了计划时间，重新修改数据
+            List<TestStatistics> statisticsList = statisticsRepository.findByName(testPlan.getName());
+            if(!CollectionUtils.isEmpty(statisticsList)){
+                for(TestStatistics testStatistics : statisticsList){
+                    if(!isEffectiveDate(testStatistics.getPlanDate(),startDate,endDate)){
+                        statisticsRepository.delete(testStatistics);
+                        logger.info("[delete]:"+testStatistics.getName()+"--"+testStatistics.getPlanDate());
+                    }
+                }
+            }
+
             while (startDate.compareTo(endDate) < 0) {
                 TestStatistics statistics = new TestStatistics();
                 statistics.setName(testPlan.getName());
@@ -170,7 +182,6 @@ public class TestPlanController {
         return "更新测试计划表";
     }
 
-
     public Implementation getRate(Long testPlanId, Long workspaceId) {
         String url = "https://api.tapd.cn/test_plans/progress?id=" + testPlanId + "&workspace_id=" + workspaceId;
         //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
@@ -190,7 +201,6 @@ public class TestPlanController {
         logger.info("===>" + implementation.getExecuted_rate());
         return implementation;
     }
-
 
     @RequestMapping(value = "/getRelaxtion", method = RequestMethod.GET)
     public String getRelaxtion() {
@@ -252,5 +262,35 @@ public class TestPlanController {
             return String.valueOf(f/100);
         }
        return "0";
+    }
+
+    /**
+     *
+     * @param nowTime   当前时间
+     * @param startTime    开始时间
+     * @param endTime   结束时间
+     * @return
+     * @author sunran   判断当前时间在时间区间内
+     */
+    public boolean isEffectiveDate(Date nowTime, Date startTime, Date endTime) {
+        if (nowTime.getTime() == startTime.getTime()
+                || nowTime.getTime() == endTime.getTime()) {
+            return true;
+        }
+
+        Calendar date = Calendar.getInstance();
+        date.setTime(nowTime);
+
+        Calendar begin = Calendar.getInstance();
+        begin.setTime(startTime);
+
+        Calendar end = Calendar.getInstance();
+        end.setTime(endTime);
+
+        if (date.after(begin) && date.before(end)) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }
