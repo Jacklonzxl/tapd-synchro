@@ -45,7 +45,18 @@ public class TestPlanController {
     private String account;
 
     @RequestMapping(value = "/initTestPlan", method = RequestMethod.GET)
-    public String initTask() {
+    public String initTestPlan(){
+        initTask();
+        initRelaxtion();
+        try {
+            updateTestPlan();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return "测试计划更新成功";
+    }
+
+    private String initTask() {
         testPlanRepository.truncateTable();
         List<Workspace> workspaces = (List<Workspace>) workspaceRepository.findAll();
         for (Workspace workspace : workspaces) {
@@ -98,7 +109,6 @@ public class TestPlanController {
         return "执行成功";
     }
 
-
     private int getCount(final String workspaceId) {
         String url = "https://api.tapd.cn/test_plans/count?workspace_id=" + workspaceId;
         //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
@@ -119,8 +129,7 @@ public class TestPlanController {
         return count;
     }
 
-    @RequestMapping(value = "/updateTestPlan", method = RequestMethod.GET)
-    public String updateTestPlan() throws ParseException {
+    private String updateTestPlan() throws ParseException {
         Iterable<TestPlan> testPlans = testPlanRepository.findAll();
         Iterator<TestPlan> iterator = testPlans.iterator();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
@@ -183,7 +192,7 @@ public class TestPlanController {
         return "更新测试计划表";
     }
 
-    public Implementation getRate(Long testPlanId, Long workspaceId) {
+    private Implementation getRate(Long testPlanId, Long workspaceId) {
         String url = "https://api.tapd.cn/test_plans/progress?id=" + testPlanId + "&workspace_id=" + workspaceId;
         //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
         HttpHeaders headers = new HttpHeaders();
@@ -203,8 +212,7 @@ public class TestPlanController {
         return implementation;
     }
 
-    @RequestMapping(value = "/getRelaxtion", method = RequestMethod.GET)
-    public String getRelaxtion() {
+    private String initRelaxtion() {
         tcaseRepository.truncateTable();
         List<Story> stories = (List<Story>) storyRepository.findAll();
         for (Story story : stories) {
@@ -274,7 +282,7 @@ public class TestPlanController {
      * @return
      * @author sunran   判断当前时间在时间区间内
      */
-    public boolean isEffectiveDate(Date nowTime, Date startTime, Date endTime) {
+    private boolean isEffectiveDate(Date nowTime, Date startTime, Date endTime) {
         if (nowTime.getTime() == startTime.getTime()
                 || nowTime.getTime() == endTime.getTime()) {
             return true;

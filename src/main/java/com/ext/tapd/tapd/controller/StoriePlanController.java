@@ -23,7 +23,7 @@ public class StoriePlanController {
     @Autowired
     private StoryPlanRepository storyPlanRepository;
 
-    @RequestMapping(value = "/initTestPlan", method = RequestMethod.GET)
+    @RequestMapping(value = "/initStoriePlan", method = RequestMethod.GET)
     public String initTask() {
         List<Map> list = taskRepository.findIterationName();
         for (Map map : list) {
@@ -98,7 +98,7 @@ public class StoriePlanController {
             storyPlan.setTotal_finish(getPresent(totalTaskNum, finishnum));
             storyPlanRepository.save(storyPlan);
         }
-        return "";
+        return "更新数据成功";
     }
 
     private String getPresent(BigInteger totalnum, int num) {

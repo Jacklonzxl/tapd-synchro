@@ -133,6 +133,12 @@
     <span>初始化任务表</span>
     <button type="button" class="but" name="初始化数据" onclick="initTask()">初始化数据</button>
     <br/>
+    <span>更新需求迭代看板表</span>
+    <button type="button" class="but" name="初始化数据" onclick="initStoriePlan()">初始化数据</button>
+    <br/>
+    <span>更新测试计划看板表</span>
+    <button type="button" class="but" name="初始化数据" onclick="initTestPlan()">初始化数据</button>
+    <br/>
 </body>
 <script src="/js/jquery-3.5.1.min.js" th:href></script>
 <script type="text/javascript" th:inline="javascript">
@@ -205,6 +211,38 @@
         $.ajax({
             method: "get",
             url: "/task/initTask",
+            beforeSend: function () {
+                load();
+            },
+            complete: function () {
+                disLoad();
+            },
+            success: function (data) {
+                alert(data);
+            }
+        })
+    }
+
+    function initStoriePlan() {
+        $.ajax({
+            method: "get",
+            url: "/storiePlan/initStoriePlan",
+            beforeSend: function () {
+                load();
+            },
+            complete: function () {
+                disLoad();
+            },
+            success: function (data) {
+                alert(data);
+            }
+        })
+    }
+
+    function initTestPlan() {
+        $.ajax({
+            method: "get",
+            url: "/testPlan/initTestPlan",
             beforeSend: function () {
                 load();
             },
