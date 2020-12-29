@@ -130,6 +130,7 @@ public class TestPlanController {
     }
 
     private String updateTestPlan() throws ParseException {
+        cleanStatistics();
         Iterable<TestPlan> testPlans = testPlanRepository.findAll();
         Iterator<TestPlan> iterator = testPlans.iterator();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
@@ -301,6 +302,21 @@ public class TestPlanController {
             return true;
         } else {
             return false;
+        }
+    }
+
+    /**
+     * 清理不存在的计划
+     */
+    private void cleanStatistics(){
+        List<String> testPlans = testPlanRepository.findName();
+        if(!CollectionUtils.isEmpty(testPlans)){
+            List<TestStatistics> testStatistics =  statisticsRepository.findByNames(testPlans);
+            if(!CollectionUtils.isEmpty(testStatistics)){
+                for(TestStatistics statistics : testStatistics){
+                    statisticsRepository.delete(statistics);
+                }
+            }
         }
     }
 }

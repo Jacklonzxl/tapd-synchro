@@ -4,6 +4,7 @@ import com.ext.tapd.tapd.pojo.TestStatistics;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.query.Param;
 
 import javax.transaction.Transactional;
 import java.util.Date;
@@ -21,4 +22,7 @@ public interface TestStatisticsRepository extends CrudRepository<TestStatistics,
     public TestStatistics findByNameAndPlanDate(String name, Date planDate);
 
     public List<TestStatistics> findByName(String name);
+
+    @Query(value = "select * from t_test_statistics where name not in (?1)", nativeQuery = true)
+    public List<TestStatistics> findByNames(@Param("names") List<String> names);
 }

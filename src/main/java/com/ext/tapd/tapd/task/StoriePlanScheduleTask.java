@@ -109,9 +109,11 @@ public class StoriePlanScheduleTask {
         if (totalnum.intValue() <= 0) {
             return "0";
         }
-//        NumberFormat numberFormat = NumberFormat.getInstance();
-//        numberFormat.setMaximumFractionDigits(2);
-//        String result = numberFormat.format((float) num / (float) totalnum.intValue() * 100);
-        return num + "/" + totalnum;
+        NumberFormat numberFormat = NumberFormat.getInstance();
+        numberFormat.setMaximumFractionDigits(2);
+        String result = numberFormat.format((float) num / (float) totalnum.intValue() * 100);
+//        return num + "/" + totalnum;
+        Float f = Float.valueOf(result);
+        return String.valueOf(f/100);
     }
 }

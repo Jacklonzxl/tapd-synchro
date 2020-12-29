@@ -21,17 +21,17 @@ public class StoryPlan implements Serializable {
     @Column(name = "task_type")
     private String taskType;
     private String total_finish;
-    private String development;
+    private String development = "9999";
     private BigInteger task_num;
-    private String requirements_review;
-    private String technical_architecture_design;
-    private String technical_scheme_design;
-    private String interface_design;
-    private String api_design;
-    private String ui_design;
-    private String view_design;
-    private String other;
-    private String empty;
+    private String requirements_review = "9999";
+    private String technical_architecture_design = "9999";
+    private String technical_scheme_design = "9999";
+    private String interface_design = "9999";
+    private String api_design = "9999";
+    private String ui_design = "9999";
+    private String view_design = "9999";
+    private String other = "9999";
+    private String empty = "9999";
 
     public Integer getId() {
         return id;

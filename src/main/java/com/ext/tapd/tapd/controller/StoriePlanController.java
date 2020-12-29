@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.thymeleaf.util.StringUtils;
 
 import java.math.BigInteger;
+import java.text.NumberFormat;
 import java.util.List;
 import java.util.Map;
 
@@ -105,9 +106,11 @@ public class StoriePlanController {
         if (totalnum.intValue() <= 0) {
             return "0";
         }
-//        NumberFormat numberFormat = NumberFormat.getInstance();
-//        numberFormat.setMaximumFractionDigits(2);
-//        String result = numberFormat.format((float) num / (float) totalnum.intValue() * 100);
-        return num + "/" + totalnum;
+        NumberFormat numberFormat = NumberFormat.getInstance();
+        numberFormat.setMaximumFractionDigits(2);
+        String result = numberFormat.format((float) num / (float) totalnum.intValue() * 100);
+//        return num + "/" + totalnum;
+        Float f = Float.valueOf(result);
+        return String.valueOf(f/100);
     }
 }
