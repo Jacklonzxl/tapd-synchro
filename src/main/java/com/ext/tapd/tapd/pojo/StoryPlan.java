@@ -22,6 +22,7 @@ public class StoryPlan implements Serializable {
     private String taskType;
     private String total_finish;
     private String development = "9999";
+    private Integer story_num;
     private BigInteger task_num;
     private String requirements_review = "9999";
     private String technical_architecture_design = "9999";
@@ -79,6 +80,14 @@ public class StoryPlan implements Serializable {
 
     public void setTotal_finish(String total_finish) {
         this.total_finish = total_finish;
+    }
+
+    public Integer getStory_num() {
+        return story_num;
+    }
+
+    public void setStory_num(Integer story_num) {
+        this.story_num = story_num;
     }
 
     public BigInteger getTask_num() {

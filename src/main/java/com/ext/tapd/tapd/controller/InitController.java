@@ -364,7 +364,7 @@ public class InitController {
                         story.setPriority(SPriorityEnum.getValue(story.getPriority()));
 
                         Optional<Iteration> iteration = iterationRepository.findById(story.getIteration_id());
-                        iteration.ifPresent(value -> story.setIteration_name(value.getName()));
+                        iteration.ifPresent(value -> story.setIterationName(value.getName()));
 
                         Optional<StoryCategories> categories = storyCategoriesRepository.findById(story.getCategory_id());
                         categories.ifPresent(storyCategories -> story.setCategory_name(storyCategories.getName()));
@@ -397,7 +397,7 @@ public class InitController {
                     Story story = g.fromJson(gsonStr, Story.class);
                     story.setPriority(SPriorityEnum.getValue(story.getPriority()));
                     Optional<Iteration> iteration = iterationRepository.findById(story.getIteration_id());
-                    iteration.ifPresent(value -> story.setIteration_name(value.getName()));
+                    iteration.ifPresent(value -> story.setIterationName(value.getName()));
                     Optional<StoryCategories> categories = storyCategoriesRepository.findById(story.getCategory_id());
                     categories.ifPresent(storyCategories -> story.setCategory_name(storyCategories.getName()));
                     Optional<Workspace> workspace = workspaceRepository.findById(story.getWorkspace_id());

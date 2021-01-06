@@ -49,7 +49,8 @@ public class Story implements Serializable {
     //迭代
     private Long iteration_id;
     //迭代名称
-    private String iteration_name;
+    @Column(name = "iteration_name")
+    private String iterationName;
     //测试重点
     private String test_focus;
     //类型
@@ -279,12 +280,12 @@ public class Story implements Serializable {
         this.iteration_id = iteration_id;
     }
 
-    public String getIteration_name() {
-        return iteration_name;
+    public String getIterationName() {
+        return iterationName;
     }
 
-    public void setIteration_name(String iteration_name) {
-        this.iteration_name = iteration_name;
+    public void setIterationName(String iterationName) {
+        this.iterationName = iterationName;
     }
 
     public String getTest_focus() {

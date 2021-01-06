@@ -14,4 +14,6 @@ public interface StoryRepository extends CrudRepository<Story, Long> {
     @Modifying
     @Query(value = "truncate table t_stories", nativeQuery = true)
     public void truncateStories();
+
+    int countByIterationName(String iterationName);
 }

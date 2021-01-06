@@ -1,6 +1,7 @@
 package com.ext.tapd.tapd.task;
 
 import com.ext.tapd.tapd.dao.StoryPlanRepository;
+import com.ext.tapd.tapd.dao.StoryRepository;
 import com.ext.tapd.tapd.dao.TaskRepository;
 import com.ext.tapd.tapd.pojo.StoryPlan;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +26,8 @@ public class StoriePlanScheduleTask {
     private TaskRepository taskRepository;
     @Autowired
     private StoryPlanRepository storyPlanRepository;
+    @Autowired
+    private StoryRepository storyRepository;
 
     @Scheduled(cron = "${cron:0 0 0-12 * * ? }") //每1小时40分执行一次
     @Async
@@ -50,9 +53,10 @@ public class StoriePlanScheduleTask {
                 }
 
             }
+            int storynum = storyRepository.countByIterationName(iterationName);
+            storyPlan.setStory_num(storynum);
             storyPlan.setTask_num((BigInteger) map.get("num"));
-            String iterationname = (String) map.get("iteration_name");
-            List<Map> typeEntities = taskRepository.findCountTaskType(iterationname);
+            List<Map> typeEntities = taskRepository.findCountTaskType(iterationName);
             int finishnum = 0;
             BigInteger totalTaskNum = ((BigInteger) map.get("num"));
             int emptynum = 0;
@@ -60,7 +64,7 @@ public class StoriePlanScheduleTask {
             for (Map map1 : typeEntities) {
                 String name = map1.get("name") == null ? "" : (String) map1.get("name");
                 BigInteger totalnum = (BigInteger) map1.get("totalnum");
-                List<Integer> numlist = taskRepository.CountFinishNum(iterationname, name);
+                List<Integer> numlist = taskRepository.CountFinishNum(iterationName, name);
                 int num = numlist.size() > 0 ? numlist.get(0) : 0;
                 finishnum += num;
                 switch (name) {

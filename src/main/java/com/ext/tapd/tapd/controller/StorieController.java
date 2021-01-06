@@ -79,7 +79,7 @@ public class StorieController {
                             story.setPriority(SPriorityEnum.getValue(story.getPriority()));
                             Optional<Iteration> iteration = iterationRepository.findById(story.getIteration_id());
                             if (iteration.isPresent()) {
-                                story.setIteration_name(iteration.get().getName());
+                                story.setIterationName(iteration.get().getName());
                             }
                             Optional<StoryCategories> categories = storyCategoriesRepository.findById(story.getCategory_id());
                             if (categories.isPresent()) {
@@ -117,7 +117,7 @@ public class StorieController {
                         story.setPriority(SPriorityEnum.getValue(story.getPriority()));
                         Optional<Iteration> iteration = iterationRepository.findById(story.getIteration_id());
                         if (iteration.isPresent()) {
-                            story.setIteration_name(iteration.get().getName());
+                            story.setIterationName(iteration.get().getName());
                         }
                         Optional<StoryCategories> categories = storyCategoriesRepository.findById(story.getCategory_id());
                         if (categories.isPresent()) {

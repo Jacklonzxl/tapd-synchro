@@ -1,6 +1,7 @@
 package com.ext.tapd.tapd.controller;
 
 import com.ext.tapd.tapd.dao.StoryPlanRepository;
+import com.ext.tapd.tapd.dao.StoryRepository;
 import com.ext.tapd.tapd.dao.TaskRepository;
 import com.ext.tapd.tapd.pojo.StoryPlan;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,18 +24,22 @@ public class StoriePlanController {
     private TaskRepository taskRepository;
     @Autowired
     private StoryPlanRepository storyPlanRepository;
+    @Autowired
+    private StoryRepository storyRepository;
 
     @RequestMapping(value = "/initStoriePlan", method = RequestMethod.GET)
     public String initTask() {
         List<Map> list = taskRepository.findIterationName();
         for (Map map : list) {
             List<StoryPlan> planList = storyPlanRepository.findByIterationName((String) map.get("iteration_name"));
+
             StoryPlan storyPlan = new StoryPlan();
             if (!CollectionUtils.isEmpty(planList) && planList.size() > 0) {
                 storyPlan.setId(planList.get(0).getId());
             }
             String iterationName = (String) map.get("iteration_name");
             storyPlan.setIterationName(iterationName);
+            int storynum = storyRepository.countByIterationName(iterationName);
             if (!StringUtils.isEmpty(iterationName)) {
                 String[] types = iterationName.split("-");
                 String[] etypes = iterationName.split("【");
@@ -47,6 +52,7 @@ public class StoriePlanController {
                 }
 
             }
+            storyPlan.setStory_num(storynum);
             storyPlan.setTask_num((BigInteger) map.get("num"));
             String iterationname = (String) map.get("iteration_name");
             List<Map> typeEntities = taskRepository.findCountTaskType(iterationname);
