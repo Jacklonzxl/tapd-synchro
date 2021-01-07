@@ -57,6 +57,8 @@ public class InitController {
     private String companyId;
     @Value("${workspace.ids}")
     private String ids;
+    @Value("${project.ids}")
+    private String projectIds;
     @Value("${tapd.account}")
     private String account;
     private final HttpHeaders headers = new HttpHeaders();
@@ -448,7 +450,7 @@ public class InitController {
             vo.getData().stream().map(map -> g.toJson(map.get("Workspace"))).forEach(gsonStr -> {
                 logger.debug("[workspace:]" + gsonStr);
                 Workspace workspace = g.fromJson(gsonStr, Workspace.class);
-                List<String> list = Arrays.asList(ids.split(","));
+                List<String> list = Arrays.asList(projectIds.split(","));
                 if (list.contains(String.valueOf(workspace.getId())))
                     workspaceRepository.save(workspace);
             });
@@ -456,7 +458,7 @@ public class InitController {
     }
 
     public void initStoryCategories() {
-        String[] idsStr = ids.split(",");
+        String[] idsStr = projectIds.split(",");
         for (String workspaceId : idsStr) {
             String url = "https://api.tapd.cn/story_categories?workspace_id=" + workspaceId;
             //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)

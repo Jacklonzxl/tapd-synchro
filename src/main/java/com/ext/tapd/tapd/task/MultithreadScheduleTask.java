@@ -47,6 +47,8 @@ public class MultithreadScheduleTask {
 
     @Value("${workspace.ids}")
     private String ids;
+    @Value("${project.ids}")
+    private String projectIds;
     @Value("${tapd.account}")
     private String account;
     private HttpHeaders headers = new HttpHeaders();
@@ -92,6 +94,9 @@ public class MultithreadScheduleTask {
 
     private void excuteTask(String type, String modified) {
         String[] idsStr = ids.split(",");
+        if(type.equals("bugs")){
+            idsStr = projectIds.split(",");
+        }
         for (String workspaceId : idsStr) {
             AtomicReference<String> url = new AtomicReference<>("https://api.tapd.cn/" + type + "?workspace_id=" + workspaceId + "&modified=>" + modified);
             //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
@@ -122,7 +127,7 @@ public class MultithreadScheduleTask {
         if (count > 200) {
             totalPage = (count / 200) + 1;
             for (int i = 1; i <= totalPage; i++) {
-                url = url + "&limit=200&page=" + i;
+                url = url+"&status=resolved|suspended|new|in_progress|postponed|rejected|reopened|unconfirmed" + "&limit=200&page=" + i;
                 //发送请求
                 HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,   //GET请求
                         new HttpEntity<>(null, headers),   //加入headers
@@ -152,7 +157,7 @@ public class MultithreadScheduleTask {
                 }
             }
         } else {
-            url = url + "&limit=200";
+            url = url +"&status=resolved|suspended|new|in_progress|postponed|rejected|reopened|unconfirmed" + "&limit=200";
             //发送请求
             HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,   //GET请求
                     new HttpEntity<>(null, headers),   //加入headers
@@ -373,6 +378,7 @@ public class MultithreadScheduleTask {
 
     private int getCount(final String workspaceId, final String type, String modified) {
         String url = "https://api.tapd.cn/" + type + "/count?workspace_id=" + workspaceId + "&modified=>" + modified;
+        if(type.equals("bugs")) url = url +"&status=resolved|suspended|new|in_progress|postponed|rejected|reopened|unconfirmed";
         //发送请求
         HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,   //GET请求
                 new HttpEntity<>(null, headers),   //加入headers

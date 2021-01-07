@@ -43,7 +43,7 @@ public class BugController {
     @Autowired
     private StatusMapRepository statusMapRepository;
 
-    @Value("${workspace.ids}")
+    @Value("${project.ids}")
     private String ids;
     @Value("${tapd.account}")
     private String account;
@@ -55,7 +55,7 @@ public class BugController {
         bugRepository.truncateBugs();
         String[] idsStr = ids.split(",");
         for (String workspaceId : idsStr) {
-            String url = "https://api.tapd.cn/bugs?workspace_id=" + workspaceId;
+            String url = "https://api.tapd.cn/bugs?workspace_id=" + workspaceId+"&status=resolved|suspended|new|in_progress|postponed|rejected|reopened|unconfirmed";
             //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
             HttpHeaders headers = new HttpHeaders();
             headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString(account.getBytes()));
@@ -130,7 +130,7 @@ public class BugController {
     }
 
     private int getCount(final String workspaceId) {
-        String url = "https://api.tapd.cn/bugs/count?workspace_id=" + workspaceId;
+        String url = "https://api.tapd.cn/bugs/count?workspace_id=" + workspaceId+"&status=resolved|suspended|new|in_progress|postponed|rejected|reopened|unconfirmed";
         //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
         HttpHeaders headers = new HttpHeaders();
         headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString(account.getBytes()));
