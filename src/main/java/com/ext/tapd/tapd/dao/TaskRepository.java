@@ -8,6 +8,7 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 
 import javax.transaction.Transactional;
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 
@@ -30,4 +31,7 @@ public interface TaskRepository extends CrudRepository<Task, Integer> {
     @Modifying()
     @Query(value = "SELECT count(id) FROM t_tasks where iteration_name = :iterationname and custom_field_one = :name AND `status` = '已完成' GROUP BY `status`", nativeQuery = true)
     public List<Integer> CountFinishNum(@Param("iterationname") String iterationname,@Param("name") String name);
+
+    @Query(value = "SELECT count(id) as num from t_tasks where iteration_name = :iterationName", nativeQuery = true)
+    BigInteger countByIterationName(String iterationName);
 }

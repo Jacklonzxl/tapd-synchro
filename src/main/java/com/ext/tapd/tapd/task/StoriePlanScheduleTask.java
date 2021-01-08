@@ -1,8 +1,10 @@
 package com.ext.tapd.tapd.task;
 
+import com.ext.tapd.tapd.dao.IterationRepository;
 import com.ext.tapd.tapd.dao.StoryPlanRepository;
 import com.ext.tapd.tapd.dao.StoryRepository;
 import com.ext.tapd.tapd.dao.TaskRepository;
+import com.ext.tapd.tapd.pojo.Iteration;
 import com.ext.tapd.tapd.pojo.StoryPlan;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
@@ -14,9 +16,9 @@ import org.thymeleaf.util.StringUtils;
 
 import java.math.BigInteger;
 import java.text.NumberFormat;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 @Component
 @EnableScheduling
@@ -28,18 +30,23 @@ public class StoriePlanScheduleTask {
     private StoryPlanRepository storyPlanRepository;
     @Autowired
     private StoryRepository storyRepository;
+    @Autowired
+    private IterationRepository iterationRepository;
 
     @Scheduled(cron = "${cron:0 0 0-12 * * ? }") //每1小时40分执行一次
     @Async
     public String initTask() {
-        List<Map> list = taskRepository.findIterationName();
-        for (Map map : list) {
-            List<StoryPlan> planList = storyPlanRepository.findByIterationName((String) map.get("iteration_name"));
+        Iterable<Iteration> iterable = iterationRepository.findAll();
+        Iterator<Iteration> iterator =  iterable.iterator();
+        while (iterator.hasNext()){
+            Iteration iteration = iterator.next();
+            String iterationName = iteration.getName();
+            BigInteger totalTaskNum = taskRepository.countByIterationName(iterationName);
+            List<StoryPlan> planList = storyPlanRepository.findByIterationName(iterationName);
             StoryPlan storyPlan = new StoryPlan();
             if (!CollectionUtils.isEmpty(planList) && planList.size() > 0) {
                 storyPlan.setId(planList.get(0).getId());
             }
-            String iterationName = (String) map.get("iteration_name");
             storyPlan.setIterationName(iterationName);
             if (!StringUtils.isEmpty(iterationName)) {
                 String[] types = iterationName.split("-");
@@ -51,14 +58,12 @@ public class StoriePlanScheduleTask {
                     storyPlan.setStoryType(etypes[0]);
                     storyPlan.setTaskType("【"+etypes[1]);
                 }
-
             }
             int storynum = storyRepository.countByIterationName(iterationName);
             storyPlan.setStory_num(storynum);
-            storyPlan.setTask_num((BigInteger) map.get("num"));
+            storyPlan.setTask_num(totalTaskNum);
             List<Map> typeEntities = taskRepository.findCountTaskType(iterationName);
             int finishnum = 0;
-            BigInteger totalTaskNum = ((BigInteger) map.get("num"));
             int emptynum = 0;
             int emptytotalnum = 0;
             for (Map map1 : typeEntities) {

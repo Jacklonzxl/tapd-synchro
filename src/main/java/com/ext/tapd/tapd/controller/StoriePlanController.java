@@ -1,8 +1,10 @@
 package com.ext.tapd.tapd.controller;
 
+import com.ext.tapd.tapd.dao.IterationRepository;
 import com.ext.tapd.tapd.dao.StoryPlanRepository;
 import com.ext.tapd.tapd.dao.StoryRepository;
 import com.ext.tapd.tapd.dao.TaskRepository;
+import com.ext.tapd.tapd.pojo.Iteration;
 import com.ext.tapd.tapd.pojo.StoryPlan;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
@@ -13,6 +15,7 @@ import org.thymeleaf.util.StringUtils;
 
 import java.math.BigInteger;
 import java.text.NumberFormat;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -26,18 +29,20 @@ public class StoriePlanController {
     private StoryPlanRepository storyPlanRepository;
     @Autowired
     private StoryRepository storyRepository;
+    @Autowired
+    private IterationRepository iterationRepository;
 
     @RequestMapping(value = "/initStoriePlan", method = RequestMethod.GET)
     public String initTask() {
-        List<Map> list = taskRepository.findIterationName();
-        for (Map map : list) {
-            List<StoryPlan> planList = storyPlanRepository.findByIterationName((String) map.get("iteration_name"));
-
+        Iterable<Iteration> iterable = iterationRepository.findAll();
+        Iterator<Iteration> iterator =  iterable.iterator();
+        while (iterator.hasNext()){
+            Iteration iteration = iterator.next();
+            String iterationName = iteration.getName();
+            BigInteger totalTaskNum = taskRepository.countByIterationName(iterationName);
+            List<StoryPlan> planList = storyPlanRepository.findByIterationName(iterationName);
             StoryPlan storyPlan = new StoryPlan();
-            if (!CollectionUtils.isEmpty(planList) && planList.size() > 0) {
-                storyPlan.setId(planList.get(0).getId());
-            }
-            String iterationName = (String) map.get("iteration_name");
+            if (!CollectionUtils.isEmpty(planList) && planList.size() > 0) { storyPlan.setId(planList.get(0).getId()); }
             storyPlan.setIterationName(iterationName);
             int storynum = storyRepository.countByIterationName(iterationName);
             if (!StringUtils.isEmpty(iterationName)) {
@@ -50,20 +55,17 @@ public class StoriePlanController {
                     storyPlan.setStoryType(etypes[0]);
                     storyPlan.setTaskType("【"+etypes[1]);
                 }
-
             }
             storyPlan.setStory_num(storynum);
-            storyPlan.setTask_num((BigInteger) map.get("num"));
-            String iterationname = (String) map.get("iteration_name");
-            List<Map> typeEntities = taskRepository.findCountTaskType(iterationname);
+            storyPlan.setTask_num(totalTaskNum);
+            List<Map> typeEntities = taskRepository.findCountTaskType(iterationName);
             int finishnum = 0;
-            BigInteger totalTaskNum = ((BigInteger) map.get("num"));
             int emptynum = 0;
             int emptytotalnum = 0;
             for (Map map1 : typeEntities) {
                 String name = map1.get("name") == null ? "" : (String) map1.get("name");
                 BigInteger totalnum = (BigInteger) map1.get("totalnum");
-                List<Integer> numlist = taskRepository.CountFinishNum(iterationname, name);
+                List<Integer> numlist = taskRepository.CountFinishNum(iterationName, name);
                 int num = numlist.size() > 0 ? numlist.get(0) : 0;
                 finishnum += num;
                 switch (name) {
@@ -101,7 +103,6 @@ public class StoriePlanController {
                         break;
                 }
             }
-
             storyPlan.setTotal_finish(getPresent(totalTaskNum, finishnum));
             storyPlanRepository.save(storyPlan);
         }
