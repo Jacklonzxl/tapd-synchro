@@ -74,6 +74,11 @@ public class TestPlanScheduleTask {
             TestPlan testPlan = (TestPlan) iterator.next();
             Date startDate = testPlan.getStart_date();
             Date endDate = testPlan.getEnd_date();
+            Optional<Workspace> workspace = workspaceRepository.findById(testPlan.getWorkspace_id());
+            String workspaceName = "";
+            if(workspace.isPresent()) {
+                workspaceName = workspace.get().getName();
+            }
 
             //修改了计划时间，重新修改数据
             List<TestStatistics> statisticsList = statisticsRepository.findByName(testPlan.getName());
@@ -90,8 +95,10 @@ public class TestPlanScheduleTask {
                 TestStatistics statistics = new TestStatistics();
                 statistics.setName(testPlan.getName());
                 statistics.setPlanDate(startDate);
+                statistics.setWorkspace_name(workspaceName);
                 TestStatistics temp = statisticsRepository.findByNameAndPlanDate(testPlan.getName(), startDate);
                 if (startDate.compareTo(today) == 0 && Objects.nonNull(temp)) {
+                    temp.setWorkspace_name(workspaceName);
                     temp = statisticsRepository.findByNameAndPlanDate(testPlan.getName(), startDate);
                     Implementation implementation = getRate(testPlan.getId(), testPlan.getWorkspace_id());
                     temp.setCoverage(transaleFloat(getCoverage(testPlan.getId(), implementation.getStory_count())));
@@ -111,10 +118,12 @@ public class TestPlanScheduleTask {
                 TestStatistics statistics = new TestStatistics();
                 statistics.setName(testPlan.getName());
                 statistics.setPlanDate(startDate);
+                statistics.setWorkspace_name(workspaceName);
                 TestStatistics temp = statisticsRepository.findByNameAndPlanDate(testPlan.getName(), startDate);
                 if (temp == null) {
                     statisticsRepository.save(statistics);
                 } else if (startDate.compareTo(today) == 0) {
+                    temp.setWorkspace_name(workspaceName);
                     temp = statisticsRepository.findByNameAndPlanDate(testPlan.getName(), startDate);
                     Implementation implementation = getRate(testPlan.getId(), testPlan.getWorkspace_id());
                     temp.setCoverage(transaleFloat(getCoverage(testPlan.getId(), implementation.getStory_count())));

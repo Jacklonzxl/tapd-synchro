@@ -28,6 +28,8 @@ public class TestStatistics implements Serializable {
     //通过率
     @Column(name = "pass_rate")
     private String passRate;
+    //项目名称
+    private String workspace_name;
 
     public Long getId() {
         return id;
@@ -75,5 +77,13 @@ public class TestStatistics implements Serializable {
 
     public void setPassRate(String passRate) {
         this.passRate = passRate;
+    }
+
+    public String getWorkspace_name() {
+        return workspace_name;
+    }
+
+    public void setWorkspace_name(String workspace_name) {
+        this.workspace_name = workspace_name;
     }
 }

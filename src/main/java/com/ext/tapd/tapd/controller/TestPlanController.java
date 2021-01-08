@@ -131,6 +131,7 @@ public class TestPlanController {
 
     private String updateTestPlan() throws ParseException {
         cleanStatistics();
+        updateWorkSpaceName();
         Iterable<TestPlan> testPlans = testPlanRepository.findAll();
         Iterator<TestPlan> iterator = testPlans.iterator();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
@@ -140,6 +141,11 @@ public class TestPlanController {
             TestPlan testPlan = (TestPlan) iterator.next();
             Date startDate = testPlan.getStart_date();
             Date endDate = testPlan.getEnd_date();
+            Optional<Workspace> workspace = workspaceRepository.findById(testPlan.getWorkspace_id());
+            String workspaceName = "";
+            if(workspace.isPresent()) {
+                workspaceName = workspace.get().getName();
+            }
 
             //修改了计划时间，重新修改数据
             List<TestStatistics> statisticsList = statisticsRepository.findByName(testPlan.getName());
@@ -156,6 +162,7 @@ public class TestPlanController {
                 TestStatistics statistics = new TestStatistics();
                 statistics.setName(testPlan.getName());
                 statistics.setPlanDate(startDate);
+                statistics.setWorkspace_name(workspaceName);
                 TestStatistics temp = statisticsRepository.findByNameAndPlanDate(testPlan.getName(), startDate);
                 if (startDate.compareTo(today) == 0 && Objects.nonNull(temp)) {
                     temp = statisticsRepository.findByNameAndPlanDate(testPlan.getName(), startDate);
@@ -163,6 +170,7 @@ public class TestPlanController {
                     temp.setCoverage(transaleFloat(getCoverage(testPlan.getId(), implementation.getStory_count())));
                     temp.setImplementRate(transaleFloat(implementation.getExecuted_rate()));
                     temp.setPassRate(transaleFloat(getPassRate(implementation)));
+                    temp.setWorkspace_name(workspaceName);
                     statisticsRepository.save(temp);
                 }
                 if (temp == null) {
@@ -177,6 +185,7 @@ public class TestPlanController {
                 TestStatistics statistics = new TestStatistics();
                 statistics.setName(testPlan.getName());
                 statistics.setPlanDate(startDate);
+                statistics.setWorkspace_name(workspaceName);
                 TestStatistics temp = statisticsRepository.findByNameAndPlanDate(testPlan.getName(), startDate);
                 if (temp == null) {
                     statisticsRepository.save(statistics);
@@ -186,6 +195,7 @@ public class TestPlanController {
                     temp.setCoverage(transaleFloat(getCoverage(testPlan.getId(), implementation.getStory_count())));
                     temp.setImplementRate(transaleFloat(implementation.getExecuted_rate()));
                     temp.setPassRate(transaleFloat(getPassRate(implementation)));
+                    temp.setWorkspace_name(workspaceName);
                     statisticsRepository.save(temp);
                 }
             }
@@ -315,6 +325,29 @@ public class TestPlanController {
             if(!CollectionUtils.isEmpty(testStatistics)){
                 for(TestStatistics statistics : testStatistics){
                     statisticsRepository.delete(statistics);
+                }
+            }
+        }
+    }
+
+    /**
+     * 更新项目名称
+     */
+    private void updateWorkSpaceName(){
+        Iterable<TestPlan> testPlans = testPlanRepository.findAll();
+        Iterator<TestPlan> iterator = testPlans.iterator();
+        while (iterator.hasNext()) {
+            TestPlan testPlan = (TestPlan) iterator.next();
+            Optional<Workspace> workspace = workspaceRepository.findById(testPlan.getWorkspace_id());
+            String workspaceName = "";
+            if(workspace.isPresent()) {
+                workspaceName = workspace.get().getName();
+            }
+            List<TestStatistics> statisticsList = statisticsRepository.findByName(testPlan.getName());
+            if(!CollectionUtils.isEmpty(statisticsList)){
+                for(TestStatistics testStatistics : statisticsList){
+                    testStatistics.setWorkspace_name(workspaceName);
+                    statisticsRepository.save(testStatistics);
                 }
             }
         }
