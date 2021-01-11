@@ -94,7 +94,7 @@ public class MultithreadScheduleTask {
 
     private void excuteTask(String type, String modified) {
         String[] idsStr = ids.split(",");
-        if(type.equals("bugs")){
+        if (type.equals("bugs")) {
             idsStr = projectIds.split(",");
         }
         for (String workspaceId : idsStr) {
@@ -122,12 +122,19 @@ public class MultithreadScheduleTask {
     }
 
     private void saveBug(String workspaceId, String modified, String url) {
-        int count = getCount(workspaceId, "bugs", modified);
+        String[] workspaceIdsStr = ids.split(",");
+        String search = "";
+        if (Arrays.asList(workspaceIdsStr).contains(workspaceId)) {
+            search = "&status=resolved|suspended|new|in_progress|postponed|rejected|reopened|unconfirmed|closed";
+        } else {
+            search = "&status=resolved|suspended|new|in_progress|postponed|rejected|reopened|unconfirmed";
+        }
+        int count = getCount(workspaceId, "bugs", modified, search);
         int totalPage = 0;
         if (count > 200) {
             totalPage = (count / 200) + 1;
             for (int i = 1; i <= totalPage; i++) {
-                url = url+"&status=resolved|suspended|new|in_progress|postponed|rejected|reopened|unconfirmed" + "&limit=200&page=" + i;
+                url = url + search + "&limit=200&page=" + i;
                 //发送请求
                 HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,   //GET请求
                         new HttpEntity<>(null, headers),   //加入headers
@@ -157,7 +164,7 @@ public class MultithreadScheduleTask {
                 }
             }
         } else {
-            url = url +"&status=resolved|suspended|new|in_progress|postponed|rejected|reopened|unconfirmed" + "&limit=200";
+            url = url + search + "&limit=200";
             //发送请求
             HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,   //GET请求
                     new HttpEntity<>(null, headers),   //加入headers
@@ -194,7 +201,7 @@ public class MultithreadScheduleTask {
     }
 
     private void saveIteration(String workspaceId, String modified, String url) {
-        int count = getCount(workspaceId, "iterations", modified);
+        int count = getCount(workspaceId, "iterations", modified, "");
         int totalPage = 0;
         if (count > 200) {
             totalPage = (count / 200) + 1;
@@ -244,7 +251,7 @@ public class MultithreadScheduleTask {
     }
 
     private void saveTask(String workspaceId, String modified, String url) {
-        int count = getCount(workspaceId, "tasks", modified);
+        int count = getCount(workspaceId, "tasks", modified, "");
         int totalPage = 0;
         if (count > 200) {
             totalPage = (count / 200) + 1;
@@ -308,7 +315,7 @@ public class MultithreadScheduleTask {
     }
 
     private void saveStory(String workspaceId, String modified, String url) {
-        int count = getCount(workspaceId, "stories", modified);
+        int count = getCount(workspaceId, "stories", modified, "");
         int totalPage = 0;
         if (count > 200) {
             totalPage = (count / 200) + 1;
@@ -376,9 +383,10 @@ public class MultithreadScheduleTask {
         }
     }
 
-    private int getCount(final String workspaceId, final String type, String modified) {
+    private int getCount(final String workspaceId, final String type, String modified, String search) {
         String url = "https://api.tapd.cn/" + type + "/count?workspace_id=" + workspaceId + "&modified=>" + modified;
-        if(type.equals("bugs")) url = url +"&status=resolved|suspended|new|in_progress|postponed|rejected|reopened|unconfirmed";
+        if (type.equals("bugs"))
+            url = url + search;
         //发送请求
         HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,   //GET请求
                 new HttpEntity<>(null, headers),   //加入headers

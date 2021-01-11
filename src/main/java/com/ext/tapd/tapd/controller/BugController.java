@@ -21,10 +21,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Base64;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * 更新缺陷表
@@ -45,6 +42,8 @@ public class BugController {
 
     @Value("${project.ids}")
     private String ids;
+    @Value("${workspace.ids}")
+    private String workspaceIds;
     @Value("${tapd.account}")
     private String account;
 
@@ -54,12 +53,19 @@ public class BugController {
     public String initBugs() {
         bugRepository.truncateBugs();
         String[] idsStr = ids.split(",");
+        String[] workspaceIdsStr = workspaceIds.split(",");
         for (String workspaceId : idsStr) {
-            String url = "https://api.tapd.cn/bugs?workspace_id=" + workspaceId+"&status=resolved|suspended|new|in_progress|postponed|rejected|reopened|unconfirmed";
+            String search = "";
+            if (Arrays.asList(workspaceIdsStr).contains(workspaceId)) {
+                search = "&status=resolved|suspended|new|in_progress|postponed|rejected|reopened|unconfirmed|closed";
+            } else {
+                search = "&status=resolved|suspended|new|in_progress|postponed|rejected|reopened|unconfirmed";
+            }
+            String url = "https://api.tapd.cn/bugs?workspace_id=" + workspaceId + search;
             //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
             HttpHeaders headers = new HttpHeaders();
             headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString(account.getBytes()));
-            int count = getCount(workspaceId);
+            int count = getCount(workspaceId, search);
             int totalPage = 0;
             if (count > 200) {
                 totalPage = (count / 200) + 1;
@@ -129,8 +135,8 @@ public class BugController {
         return "执行成功";
     }
 
-    private int getCount(final String workspaceId) {
-        String url = "https://api.tapd.cn/bugs/count?workspace_id=" + workspaceId+"&status=resolved|suspended|new|in_progress|postponed|rejected|reopened|unconfirmed";
+    private int getCount(final String workspaceId, final String search) {
+        String url = "https://api.tapd.cn/bugs/count?workspace_id=" + workspaceId + search;
         //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
         HttpHeaders headers = new HttpHeaders();
         headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString(account.getBytes()));
