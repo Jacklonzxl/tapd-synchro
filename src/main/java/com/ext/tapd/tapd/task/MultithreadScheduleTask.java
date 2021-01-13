@@ -267,20 +267,27 @@ public class MultithreadScheduleTask {
                         .create();
                 ResultEntity vo = g.fromJson(gson, ResultEntity.class);
                 if (vo.getData().size() > 0) {
-                    vo.getData().stream().map(map -> g.toJson(map.get("Task"))).forEach(gsonStr -> {
-                        logger.info("[Task:]" + gsonStr);
+                    for (LinkedTreeMap map : vo.getData()) {
+                        String gsonStr = g.toJson(map.get("Task"));
+                        System.out.println(gsonStr);
                         Task task = g.fromJson(gsonStr, Task.class);
                         task.setStatus(StatusEnum.getValue(task.getStatus()));
                         task.setPriority(SPriorityEnum.getValue(task.getPriority()));
                         task.setProgress(task.getProgress() + "%");
                         Optional<Iteration> iteration = iterationRepository.findById(task.getIteration_id());
-                        iteration.ifPresent(value -> task.setIteration_name(value.getName()));
+                        if (iteration.isPresent()) {
+                            task.setIteration_name(iteration.get().getName());
+                        }
                         Optional<Story> story = storyRepository.findById(task.getStory_id());
-                        story.ifPresent(value -> task.setStory_name(value.getName()));
+                        if (story.isPresent()) {
+                            task.setStory_name(story.get().getName());
+                        }
                         Optional<Workspace> workspace = workspaceRepository.findById(task.getWorkspace_id());
-                        workspace.ifPresent(value -> task.setWorkspace_name(value.getName()));
+                        if (workspace.isPresent()) {
+                            task.setWorkspace_name(workspace.get().getName());
+                        }
                         taskRepository.save(task);
-                    });
+                    }
                 }
             }
         } else {
@@ -297,17 +304,23 @@ public class MultithreadScheduleTask {
             if (vo.getData().size() > 0) {
                 for (LinkedTreeMap map : vo.getData()) {
                     String gsonStr = g.toJson(map.get("Task"));
-                    logger.info("[Task:]" + gsonStr);
+                    System.out.println(gsonStr);
                     Task task = g.fromJson(gsonStr, Task.class);
                     task.setStatus(StatusEnum.getValue(task.getStatus()));
                     task.setPriority(SPriorityEnum.getValue(task.getPriority()));
                     task.setProgress(task.getProgress() + "%");
                     Optional<Iteration> iteration = iterationRepository.findById(task.getIteration_id());
-                    iteration.ifPresent(value -> task.setIteration_name(value.getName()));
+                    if (iteration.isPresent()) {
+                        task.setIteration_name(iteration.get().getName());
+                    }
                     Optional<Story> story = storyRepository.findById(task.getStory_id());
-                    story.ifPresent(value -> task.setStory_name(value.getName()));
+                    if (story.isPresent()) {
+                        task.setStory_name(story.get().getName());
+                    }
                     Optional<Workspace> workspace = workspaceRepository.findById(task.getWorkspace_id());
-                    workspace.ifPresent(value -> task.setWorkspace_name(value.getName()));
+                    if (workspace.isPresent()) {
+                        task.setWorkspace_name(workspace.get().getName());
+                    }
                     taskRepository.save(task);
                 }
             }
