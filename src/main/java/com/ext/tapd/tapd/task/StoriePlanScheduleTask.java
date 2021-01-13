@@ -33,7 +33,7 @@ public class StoriePlanScheduleTask {
     @Autowired
     private IterationRepository iterationRepository;
 
-    @Scheduled(cron = "${cron:0 0 0-12 * * ? }") //每1小时40分执行一次
+    @Scheduled(cron = "${cron:0 0/30 * * * ?}")
     @Async
     public String initTask() {
         Iterable<Iteration> iterable = iterationRepository.findAll();

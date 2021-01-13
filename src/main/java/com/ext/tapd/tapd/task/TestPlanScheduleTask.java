@@ -45,7 +45,7 @@ public class TestPlanScheduleTask {
     @Value("${tapd.account}")
     private String account;
 
-    @Scheduled(cron = "${cron:0 0/30 0/1 * * ?}") //每2小时执行一次
+    @Scheduled(cron = "${cron:0 0/30 * * * ?}")
     @Async
     public void testPlan() {
         logger.info("===============开始同步测试计划=====================");
