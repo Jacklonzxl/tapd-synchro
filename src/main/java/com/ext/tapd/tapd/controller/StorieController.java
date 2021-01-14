@@ -75,7 +75,6 @@ public class StorieController {
                             String gsonStr = g.toJson(map.get("Story"));
                             System.out.println(gsonStr);
                             Story story = g.fromJson(gsonStr, Story.class);
-//                            story.setStatus(StatusEnum.getValue(story.getStatus()));
                             story.setPriority(SPriorityEnum.getValue(story.getPriority()));
                             Optional<Iteration> iteration = iterationRepository.findById(story.getIteration_id());
                             if (iteration.isPresent()) {
@@ -113,7 +112,6 @@ public class StorieController {
                         String gsonStr = g.toJson(map.get("Story"));
                         System.out.println(gsonStr);
                         Story story = g.fromJson(gsonStr, Story.class);
-//                        story.setStatus(StatusEnum.getValue(story.getStatus()));
                         story.setPriority(SPriorityEnum.getValue(story.getPriority()));
                         Optional<Iteration> iteration = iterationRepository.findById(story.getIteration_id());
                         if (iteration.isPresent()) {

@@ -35,38 +35,41 @@ public class BaseDataScheduleTask {
     private WorkspaceRepository workspaceRepository;
     @Value("${tapd.account}")
     private String account;
+    @Value("${task.schedule.enabled}")
+    private boolean scheduleEnabled;
 
-    @Scheduled(cron = "${cron:0 0 0/1 * * ?}") //每1小时执行一次
+    @Scheduled(cron = "${cron:0 0/10 0/1 * * ?}") //每1小时执行一次
     @Async
     public void task() {
-        //logger.debug("=========================>清空状态表");
-        statusMapRepository.truncateStatusMap();
-        List<Workspace> workspaces = (List<Workspace>) workspaceRepository.findAll();
-        String[] systems = {"story", "bug"};
-        for (Workspace workspace : workspaces) {
-            for (String system : systems) {
-                String url = String.format("https://api.tapd.cn/workflows/status_map?system=%s&workspace_id=%d", system, workspace.getId());
-                //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
-                HttpHeaders headers = new HttpHeaders();
-                headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString(account.getBytes()));
-                //发送请求
-                HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,   //GET请求
-                        new HttpEntity<>(null, headers),   //加入headers
-                        String.class);  //body响应数据接收类型
-                String gson = ans.getBody();
-                logger.info(gson);
-                Gson g = new GsonBuilder()
-                        .setDateFormat("yyyy-MM-dd HH:mm:ss")
-                        .create();
-                ResultStatusEntity vo = g.fromJson(gson, ResultStatusEntity.class);
-                if (vo.getData().size() > 0) {
-                    for (Object key : vo.getData().keySet()) {
-                        StatusMap statusMap = new StatusMap();
-                        statusMap.setCode((String) key);
-                        statusMap.setName((String) vo.getData().get((String) key));
-                        statusMap.setSystem(system);
-                        statusMap.setWorkspaceId(workspace.getId());
-                        statusMapRepository.save(statusMap);
+        if(scheduleEnabled){
+            statusMapRepository.truncateStatusMap();
+            List<Workspace> workspaces = (List<Workspace>) workspaceRepository.findAll();
+            String[] systems = {"story", "bug"};
+            for (Workspace workspace : workspaces) {
+                for (String system : systems) {
+                    String url = String.format("https://api.tapd.cn/workflows/status_map?system=%s&workspace_id=%d", system, workspace.getId());
+                    //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
+                    HttpHeaders headers = new HttpHeaders();
+                    headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString(account.getBytes()));
+                    //发送请求
+                    HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,   //GET请求
+                            new HttpEntity<>(null, headers),   //加入headers
+                            String.class);  //body响应数据接收类型
+                    String gson = ans.getBody();
+                    logger.info(gson);
+                    Gson g = new GsonBuilder()
+                            .setDateFormat("yyyy-MM-dd HH:mm:ss")
+                            .create();
+                    ResultStatusEntity vo = g.fromJson(gson, ResultStatusEntity.class);
+                    if (vo.getData().size() > 0) {
+                        for (Object key : vo.getData().keySet()) {
+                            StatusMap statusMap = new StatusMap();
+                            statusMap.setCode((String) key);
+                            statusMap.setName((String) vo.getData().get((String) key));
+                            statusMap.setSystem(system);
+                            statusMap.setWorkspaceId(workspace.getId());
+                            statusMapRepository.save(statusMap);
+                        }
                     }
                 }
             }

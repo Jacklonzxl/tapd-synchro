@@ -44,19 +44,23 @@ public class TestPlanScheduleTask {
 
     @Value("${tapd.account}")
     private String account;
+    @Value("${task.schedule.enabled}")
+    private boolean scheduleEnabled;
 
-    @Scheduled(cron = "${cron:0 0/30 * * * ?}")
+    @Scheduled(cron = "${cron:0 0/35 * * * ?}")
     @Async
     public void testPlan() {
-        logger.info("===============开始同步测试计划=====================");
-        initTask();
-        initRelaxtion();
-        try {
-            updateTestPlan();
-        } catch (ParseException e) {
-            e.printStackTrace();
+        if(scheduleEnabled){
+            logger.info("===============开始同步测试计划=====================");
+            initTask();
+            initRelaxtion();
+            try {
+                updateTestPlan();
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+            logger.info("===============同步测试计划完成=====================");
         }
-        logger.info("===============同步测试计划完成=====================");
     }
 
 

@@ -51,45 +51,54 @@ public class MultithreadScheduleTask {
     private String projectIds;
     @Value("${tapd.account}")
     private String account;
+    @Value("${task.schedule.enabled}")
+    private boolean scheduleEnabled;
     private HttpHeaders headers = new HttpHeaders();
 
 
     @Scheduled(cron = "${cron:0 0/30 * * * ?}") //每半小时执行一次
-//    @Scheduled(cron = "${cron:0/30 * * * * ?}")//每5分钟执行一次
     @Async
     public void task() {
-        Date now = new Date();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        String modified = sdf.format(now);
-        excuteTask("tasks", modified);
+        if(scheduleEnabled){
+            Date now = new Date();
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            String modified = sdf.format(now);
+            excuteTask("tasks", modified);
+        }
     }
 
 
     @Scheduled(cron = "${cron:0 0/30 * * * ?}") //每半小时执行一次
     @Async
     public void bug() {
-        Date now = new Date();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        String modified = sdf.format(now);
-        excuteTask("bugs", modified);
+        if(scheduleEnabled){
+            Date now = new Date();
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            String modified = sdf.format(now);
+            excuteTask("bugs", modified);
+        }
     }
 
     @Scheduled(cron = "${cron:0 0/30 * * * ?}") //每半小时执行一次
     @Async
     public void story() {
-        Date now = new Date();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        String modified = sdf.format(now);
-        excuteTask("stories", modified);
+        if(scheduleEnabled){
+            Date now = new Date();
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            String modified = sdf.format(now);
+            excuteTask("stories", modified);
+        }
     }
 
     @Scheduled(cron = "${cron:0 0/30 * * * ?}") //每半小时执行一次
     @Async
     public void iteration() {
-        Date now = new Date();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        String modified = sdf.format(now);
-        excuteTask("iterations", modified);
+        if(scheduleEnabled){
+            Date now = new Date();
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            String modified = sdf.format(now);
+            excuteTask("iterations", modified);
+        }
     }
 
     private void excuteTask(String type, String modified) {

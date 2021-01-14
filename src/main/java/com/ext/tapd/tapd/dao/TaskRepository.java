@@ -33,5 +33,8 @@ public interface TaskRepository extends CrudRepository<Task, Integer> {
     public List<Integer> CountFinishNum(@Param("iterationname") String iterationname,@Param("name") String name);
 
     @Query(value = "SELECT count(id) as num from t_tasks where iteration_name = :iterationName", nativeQuery = true)
-    BigInteger countByIterationName(String iterationName);
+    BigInteger countByIterationName(@Param("iterationName") String iterationName);
+
+    @Query(value = "SELECT count(id) FROM t_tasks where iteration_name = :iterationname AND `status` = '已完成' GROUP BY `status`", nativeQuery = true)
+    Integer countByIterationNameFinishNum(@Param("iterationname") String iterationname);
 }

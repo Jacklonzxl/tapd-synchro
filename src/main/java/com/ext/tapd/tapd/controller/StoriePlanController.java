@@ -44,7 +44,8 @@ public class StoriePlanController {
             StoryPlan storyPlan = new StoryPlan();
             if (!CollectionUtils.isEmpty(planList) && planList.size() > 0) { storyPlan.setId(planList.get(0).getId()); }
             storyPlan.setIterationName(iterationName);
-            int storynum = storyRepository.countByIterationName(iterationName);
+            Integer storynum = storyRepository.countByIterationName(iterationName);
+            if(storynum==null) storynum = 0;
             if (!StringUtils.isEmpty(iterationName)) {
                 String[] types = iterationName.split("-");
                 String[] etypes = iterationName.split("【");
@@ -59,7 +60,6 @@ public class StoriePlanController {
             storyPlan.setStory_num(storynum);
             storyPlan.setTask_num(totalTaskNum);
             List<Map> typeEntities = taskRepository.findCountTaskType(iterationName);
-            int finishnum = 0;
             int emptynum = 0;
             int emptytotalnum = 0;
             for (Map map1 : typeEntities) {
@@ -67,7 +67,6 @@ public class StoriePlanController {
                 BigInteger totalnum = (BigInteger) map1.get("totalnum");
                 List<Integer> numlist = taskRepository.CountFinishNum(iterationName, name);
                 int num = numlist.size() > 0 ? numlist.get(0) : 0;
-                finishnum += num;
                 switch (name) {
                     case "开发":
                         storyPlan.setDevelopment(getPresent(totalnum, num));
@@ -103,6 +102,8 @@ public class StoriePlanController {
                         break;
                 }
             }
+            Integer finishnum = taskRepository.countByIterationNameFinishNum(iterationName);
+            if(finishnum==null) finishnum = 0;
             storyPlan.setTotal_finish(getPresent(totalTaskNum, finishnum));
             storyPlanRepository.save(storyPlan);
         }
