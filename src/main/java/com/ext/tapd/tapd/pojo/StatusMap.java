@@ -3,6 +3,9 @@ package com.ext.tapd.tapd.pojo;
 import javax.persistence.*;
 import java.io.Serializable;
 
+/**
+ * @author lx
+ */
 @Entity
 @Table(name = "t_status_map")
 public class StatusMap implements Serializable {

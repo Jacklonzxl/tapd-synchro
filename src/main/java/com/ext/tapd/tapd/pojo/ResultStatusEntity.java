@@ -2,6 +2,9 @@ package com.ext.tapd.tapd.pojo;
 
 import java.util.Map;
 
+/**
+ * @author lx
+ */
 public class ResultStatusEntity {
 
     private Integer status;

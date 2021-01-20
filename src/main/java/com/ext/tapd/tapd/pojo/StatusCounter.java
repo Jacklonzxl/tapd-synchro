@@ -1,5 +1,8 @@
 package com.ext.tapd.tapd.pojo;
 
+/**
+ * @author lx
+ */
 public class StatusCounter {
     private int pass;
     private int no_pass;

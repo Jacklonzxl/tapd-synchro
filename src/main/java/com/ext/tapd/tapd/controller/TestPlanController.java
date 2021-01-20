@@ -17,11 +17,15 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import javax.transaction.Transactional;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+/**
+ * @author lx
+ */
 @RestController
 @RequestMapping("/testPlan")
 public class TestPlanController {
@@ -45,18 +49,21 @@ public class TestPlanController {
     private String account;
 
     @RequestMapping(value = "/initTestPlan", method = RequestMethod.GET)
+    @Transactional(rollbackOn = {Exception.class})
     public String initTestPlan(){
+        logger.info("=========================>更新测试计划表开始");
         initTask();
-        initRelaxtion();
+        initRelation();
         try {
             updateTestPlan();
         } catch (ParseException e) {
             e.printStackTrace();
         }
+        logger.info("=========================>更新测试计划表结束");
         return "测试计划更新成功";
     }
 
-    private String initTask() {
+    private void initTask() {
         testPlanRepository.truncateTable();
         List<Workspace> workspaces = (List<Workspace>) workspaceRepository.findAll();
         for (Workspace workspace : workspaces) {
@@ -65,23 +72,17 @@ public class TestPlanController {
             HttpHeaders headers = new HttpHeaders();
             headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString(account.getBytes()));
             int count = getCount(workspace.getId() + "");
-            int totalPage = 0;
+            int totalPage;
             if (count > 200) {
                 totalPage = (count / 200) + 1;
                 for (int i = 1; i <= totalPage; i++) {
                     url = url + "&limit=200&page=" + i;
-                    //发送请求
-                    HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,   //GET请求
-                            new HttpEntity<>(null, headers),   //加入headers
-                            String.class);  //body响应数据接收类型
+                    HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,new HttpEntity<>(null, headers),String.class);
                     String gson = ans.getBody();
-                    Gson g = new GsonBuilder()
-                            .setDateFormat("yyyy-MM-dd HH:mm:ss")
-                            .create();
+                    Gson g = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create();
                     ResultEntity vo = g.fromJson(gson, ResultEntity.class);
                     if (vo.getData().size() > 0) {
                         vo.getData().stream().map(map -> g.toJson(map.get("TestPlan"))).forEach(gsonStr -> {
-                            logger.info(gsonStr);
                             TestPlan testPlan = g.fromJson(gsonStr, TestPlan.class);
                             testPlanRepository.save(testPlan);
                         });
@@ -89,24 +90,18 @@ public class TestPlanController {
                 }
             } else {
                 url = url + "&limit=200";
-                HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,   //GET请求
-                        new HttpEntity<>(null, headers),   //加入headers
-                        String.class);  //body响应数据接收类型
+                HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,new HttpEntity<>(null, headers),String.class);
                 String gson = ans.getBody();
-                Gson g = new GsonBuilder()
-                        .setDateFormat("yyyy-MM-dd HH:mm:ss")
-                        .create();
+                Gson g = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create();
                 ResultEntity vo = g.fromJson(gson, ResultEntity.class);
                 if (vo.getData().size() > 0) {
                     vo.getData().stream().map(map -> g.toJson(map.get("TestPlan"))).forEach(gsonStr -> {
-                        logger.info(gsonStr);
                         TestPlan testPlan = g.fromJson(gsonStr, TestPlan.class);
                         testPlanRepository.save(testPlan);
                     });
                 }
             }
         }
-        return "执行成功";
     }
 
     private int getCount(final String workspaceId) {
@@ -114,22 +109,14 @@ public class TestPlanController {
         //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
         HttpHeaders headers = new HttpHeaders();
         headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString(account.getBytes()));
-        //发送请求
-        HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,   //GET请求
-                new HttpEntity<>(null, headers),   //加入headers
-                String.class);  //body响应数据接收类型
+        HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,new HttpEntity<>(null, headers),String.class);
         String gson = ans.getBody();
-        logger.info(gson);
-        Gson g = new GsonBuilder()
-                .setDateFormat("yyyy-MM-dd HH:mm:ss")
-                .create();
+        Gson g = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create();
         ResultCountEntity vo = g.fromJson(gson, ResultCountEntity.class);
-        Map map = vo.getData();
-        int count = new Double((Double) map.get("count")).intValue();
-        return count;
+        return ((Double) vo.getData().get("count")).intValue();
     }
 
-    private String updateTestPlan() throws ParseException {
+    private void updateTestPlan() throws ParseException {
         cleanStatistics();
         updateWorkSpaceName();
         Iterable<TestPlan> testPlans = testPlanRepository.findAll();
@@ -138,7 +125,7 @@ public class TestPlanController {
         String s = sdf.format(new Date());
         Date today = sdf.parse(s);
         while (iterator.hasNext()) {
-            TestPlan testPlan = (TestPlan) iterator.next();
+            TestPlan testPlan = iterator.next();
             Date startDate = testPlan.getStart_date();
             Date endDate = testPlan.getEnd_date();
             Optional<Workspace> workspace = workspaceRepository.findById(testPlan.getWorkspace_id());
@@ -153,7 +140,6 @@ public class TestPlanController {
                 for(TestStatistics testStatistics : statisticsList){
                     if(!isEffectiveDate(testStatistics.getPlanDate(),startDate,endDate)){
                         statisticsRepository.delete(testStatistics);
-                        logger.info("[delete]:"+testStatistics.getName()+"--"+testStatistics.getPlanDate());
                     }
                 }
             }
@@ -200,7 +186,6 @@ public class TestPlanController {
                 }
             }
         }
-        return "更新测试计划表";
     }
 
     private Implementation getRate(Long testPlanId, Long workspaceId) {
@@ -208,22 +193,14 @@ public class TestPlanController {
         //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
         HttpHeaders headers = new HttpHeaders();
         headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString(account.getBytes()));
-        //发送请求
-        HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,   //GET请求
-                new HttpEntity<>(null, headers),   //加入headers
-                String.class);  //body响应数据接收类型
+        HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,new HttpEntity<>(null, headers),String.class);
         String gson = ans.getBody();
-        logger.info(gson);
-        Gson g = new GsonBuilder()
-                .setDateFormat("yyyy-MM-dd HH:mm:ss")
-                .create();
+        Gson g = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create();
         ResultImplementionEntity vo = g.fromJson(gson, ResultImplementionEntity.class);
-        Implementation implementation = vo.getData();
-        logger.info("===>" + implementation.getExecuted_rate());
-        return implementation;
+        return vo.getData();
     }
 
-    private String initRelaxtion() {
+    private void initRelation() {
         tcaseRepository.truncateTable();
         List<Story> stories = (List<Story>) storyRepository.findAll();
         for (Story story : stories) {
@@ -231,16 +208,9 @@ public class TestPlanController {
             //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
             HttpHeaders headers = new HttpHeaders();
             headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString(account.getBytes()));
-            //发送请求
-            HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,   //GET请求
-                    new HttpEntity<>(null, headers),   //加入headers
-                    String.class);  //body响应数据接收类型
+            HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,new HttpEntity<>(null, headers),String.class);
             String gson = ans.getBody();
-            logger.info(gson);
-            Gson g = new GsonBuilder()
-                    .setDateFormat("yyyy-MM-dd HH:mm:ss")
-                    .create();
-            logger.info(gson);
+            Gson g = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create();
             ResultTestPlanStoryTcaseRelationEntity vo = g.fromJson(gson, ResultTestPlanStoryTcaseRelationEntity.class);
             List<TcaseRelationEntity> tcaseRelations = vo.getData();
             if (!CollectionUtils.isEmpty(tcaseRelations)) {
@@ -252,7 +222,6 @@ public class TestPlanController {
             }
 
         }
-        return "执行完成";
     }
 
     private String getCoverage(Long testPlanId, int storyCount) {
@@ -279,7 +248,7 @@ public class TestPlanController {
     private String transaleFloat(String present) {
         if (present.contains("%")) {
             present = present.replaceAll("%", "");
-            Float f = Float.valueOf(present);
+            float f = Float.parseFloat(present);
             return String.valueOf(f/100);
         }
        return "0";
@@ -288,9 +257,8 @@ public class TestPlanController {
     /**
      *
      * @param nowTime   当前时间
-     * @param startTime    开始时间
+     * @param startTime 开始时间
      * @param endTime   结束时间
-     * @return
      * @author sunran   判断当前时间在时间区间内
      */
     private boolean isEffectiveDate(Date nowTime, Date startTime, Date endTime) {
@@ -308,11 +276,7 @@ public class TestPlanController {
         Calendar end = Calendar.getInstance();
         end.setTime(endTime);
 
-        if (date.after(begin) && date.before(end)) {
-            return true;
-        } else {
-            return false;
-        }
+        return date.after(begin) && date.before(end);
     }
 
     /**
@@ -335,17 +299,15 @@ public class TestPlanController {
      */
     private void updateWorkSpaceName(){
         Iterable<TestPlan> testPlans = testPlanRepository.findAll();
-        Iterator<TestPlan> iterator = testPlans.iterator();
-        while (iterator.hasNext()) {
-            TestPlan testPlan = (TestPlan) iterator.next();
+        for (TestPlan testPlan : testPlans) {
             Optional<Workspace> workspace = workspaceRepository.findById(testPlan.getWorkspace_id());
             String workspaceName = "";
-            if(workspace.isPresent()) {
+            if (workspace.isPresent()) {
                 workspaceName = workspace.get().getName();
             }
             List<TestStatistics> statisticsList = statisticsRepository.findByName(testPlan.getName());
-            if(!CollectionUtils.isEmpty(statisticsList)){
-                for(TestStatistics testStatistics : statisticsList){
+            if (!CollectionUtils.isEmpty(statisticsList)) {
+                for (TestStatistics testStatistics : statisticsList) {
                     testStatistics.setWorkspace_name(workspaceName);
                     statisticsRepository.save(testStatistics);
                 }

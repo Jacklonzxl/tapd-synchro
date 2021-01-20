@@ -9,20 +9,41 @@ import org.springframework.data.repository.query.Param;
 import javax.transaction.Transactional;
 import java.util.Date;
 import java.util.List;
-
-// 继承CrudRepository接口，<实体类, 主键类型>
-// JPA根据实体类的类名去对应表名（可以使用@Entity的name属性？@Table进行修改）
+/**
+ * @author lx
+ * 继承CrudRepository接口，<实体类, 主键类型>
+ * JPA根据实体类的类名去对应表名（可以使用@Entity的name属性？@Table进行修改）
+ */
 public interface TestStatisticsRepository extends CrudRepository<TestStatistics, Long> {
 
-    @Transactional
+    /**
+     * 清空测试计划统计表
+     */
+    @Transactional(rollbackOn = {Exception.class})
     @Modifying
     @Query(value = "truncate table t_test_statistics", nativeQuery = true)
-    public void truncateTable();
+    void truncateTable();
 
-    public TestStatistics findByNameAndPlanDate(String name, Date planDate);
+    /**
+     * 根据测试计划名称和日期查找测试计划统计
+     * @param name 测试计划名称
+     * @param planDate 日期
+     * @return 测试计划统计
+     */
+    TestStatistics findByNameAndPlanDate(String name, Date planDate);
 
-    public List<TestStatistics> findByName(String name);
+    /**
+     * 根据测试计划名称查找测试计划统计
+     * @param name 测试计划名称
+     * @return 测试计划统计
+     */
+    List<TestStatistics> findByName(String name);
 
+    /**
+     * 通过测试计划名称查找已改变的测试计划
+     * @param names 测试计划名称
+     * @return 测试计划统计
+     */
     @Query(value = "select * from t_test_statistics where name not in (?1)", nativeQuery = true)
-    public List<TestStatistics> findByNames(@Param("names") List<String> names);
+    List<TestStatistics> findByNames(@Param("names") List<String> names);
 }

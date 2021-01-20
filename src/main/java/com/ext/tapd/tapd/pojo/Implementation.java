@@ -1,5 +1,8 @@
 package com.ext.tapd.tapd.pojo;
 
+/**
+ * @author lx
+ */
 public class Implementation {
 
     private int story_count;

@@ -23,10 +23,13 @@ import org.springframework.web.client.RestTemplate;
 import java.util.Base64;
 import java.util.List;
 
+/**
+ * @author lx
+ */
 @Component
 @EnableScheduling
 public class BaseDataScheduleTask {
-    private static Logger logger = LoggerFactory.getLogger(BaseDataScheduleTask.class);
+    private static final Logger logger = LoggerFactory.getLogger(BaseDataScheduleTask.class);
     @Autowired
     private RestTemplate restTemplate;
     @Autowired
@@ -42,6 +45,7 @@ public class BaseDataScheduleTask {
     @Async
     public void task() {
         if(scheduleEnabled){
+            logger.info("=========================>定时初始化基础表开始");
             statusMapRepository.truncateStatusMap();
             List<Workspace> workspaces = (List<Workspace>) workspaceRepository.findAll();
             String[] systems = {"story", "bug"};
@@ -51,28 +55,24 @@ public class BaseDataScheduleTask {
                     //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
                     HttpHeaders headers = new HttpHeaders();
                     headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString(account.getBytes()));
-                    //发送请求
-                    HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,   //GET请求
-                            new HttpEntity<>(null, headers),   //加入headers
-                            String.class);  //body响应数据接收类型
+                    HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,new HttpEntity<>(null, headers),String.class);
                     String gson = ans.getBody();
-                    logger.info(gson);
-                    Gson g = new GsonBuilder()
-                            .setDateFormat("yyyy-MM-dd HH:mm:ss")
-                            .create();
+                    Gson g = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create();
                     ResultStatusEntity vo = g.fromJson(gson, ResultStatusEntity.class);
+                    logger.info("=========================>初始化-t_status_map-["+workspace.getName()+"]-["+system+"] 总数:"+vo.getData().size());
                     if (vo.getData().size() > 0) {
-                        for (Object key : vo.getData().keySet()) {
+                        vo.getData().keySet().forEach(key -> {
                             StatusMap statusMap = new StatusMap();
-                            statusMap.setCode((String) key);
-                            statusMap.setName((String) vo.getData().get((String) key));
+                            statusMap.setCode(key);
+                            statusMap.setName((String) vo.getData().get(key));
                             statusMap.setSystem(system);
                             statusMap.setWorkspaceId(workspace.getId());
                             statusMapRepository.save(statusMap);
-                        }
+                        });
                     }
                 }
             }
+            logger.info("=========================>定时初始化基础表结束");
         }
     }
 }

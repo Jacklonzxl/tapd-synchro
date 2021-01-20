@@ -1,10 +1,22 @@
 package com.ext.tapd.tapd.common.status;
 
 
+/**
+ * 等级状态 枚举
+ * @author lx
+ */
 public enum PriorityEnum {
+    //紧急
+    URGENT("urgent", "紧急"),
+    //高
+    HIGH("high", "高"),
+    //中
+    MEDIUM("medium", "中"),
+    //低
+    LOW("low", "低"),
+    //无关紧要
+    INSIGNIFICANT("insignificant", "无关紧要");
 
-    URGENT("urgent", "紧急"), HIGH("high", "高"), MEDIUM("medium", "中"),
-    LOW("low", "低"), INSIGNIFICANT("insignificant", "无关紧要");
     private String code;
     private String name;
 
@@ -31,7 +43,9 @@ public enum PriorityEnum {
 
     public static String getValue(String code) {
         for (PriorityEnum el : values()) {
-            if (el.getCode().equals(code)) return el.getName();
+            if (el.getCode().equals(code)) {
+                return el.getName();
+            }
         }
         return null;
     }

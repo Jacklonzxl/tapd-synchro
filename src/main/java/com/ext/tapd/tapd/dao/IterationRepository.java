@@ -6,13 +6,18 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
 import javax.transaction.Transactional;
-
-// 继承CrudRepository接口，<实体类, 主键类型>
-// JPA根据实体类的类名去对应表名（可以使用@Entity的name属性？@Table进行修改）
+/**
+ * @author lx
+ * 继承CrudRepository接口，<实体类, 主键类型>
+ * JPA根据实体类的类名去对应表名（可以使用@Entity的name属性？@Table进行修改）
+ */
 public interface IterationRepository extends CrudRepository<Iteration, Long> {
 
-    @Transactional
+    /**
+     * 清空迭代表
+     */
+    @Transactional(rollbackOn = {Exception.class})
     @Modifying
     @Query(value = "truncate table t_iterations", nativeQuery = true)
-    public void truncateIteration();
+    void truncateIteration();
 }

@@ -6,6 +6,9 @@ import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
 
+/**
+ * @author lx
+ */
 @Entity
 @Table(name = "t_test_statistics")
 public class TestStatistics implements Serializable {

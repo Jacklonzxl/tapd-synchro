@@ -7,6 +7,9 @@ import javax.persistence.Table;
 import java.io.Serializable;
 import java.util.Date;
 
+/**
+ * @author lx
+ */
 @Entity
 @Table(name = "t_workspace")
 public class Workspace implements Serializable {

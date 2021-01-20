@@ -7,6 +7,9 @@ import javax.persistence.Table;
 import java.io.Serializable;
 import java.util.Date;
 
+/**
+ * @author lx
+ */
 @Entity
 @Table(name = "t_test_plan_story_tcase")
 public class TestPlanStoryTcaseRelation implements Serializable {

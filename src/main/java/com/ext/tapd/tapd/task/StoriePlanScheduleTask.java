@@ -6,6 +6,8 @@ import com.ext.tapd.tapd.dao.StoryRepository;
 import com.ext.tapd.tapd.dao.TaskRepository;
 import com.ext.tapd.tapd.pojo.Iteration;
 import com.ext.tapd.tapd.pojo.StoryPlan;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
@@ -17,14 +19,16 @@ import org.thymeleaf.util.StringUtils;
 
 import java.math.BigInteger;
 import java.text.NumberFormat;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * @author lx
+ */
 @Component
 @EnableScheduling
 public class StoriePlanScheduleTask {
-
+    private static final Logger logger = LoggerFactory.getLogger(StoriePlanScheduleTask.class);
     @Autowired
     private TaskRepository taskRepository;
     @Autowired
@@ -40,10 +44,9 @@ public class StoriePlanScheduleTask {
     @Async
     public void initTask() {
         if(scheduleEnabled){
+            logger.info("=========================>定时初始化需求计划表开始");
             Iterable<Iteration> iterable = iterationRepository.findAll();
-            Iterator<Iteration> iterator =  iterable.iterator();
-            while (iterator.hasNext()){
-                Iteration iteration = iterator.next();
+            for (Iteration iteration : iterable) {
                 String iterationName = iteration.getName();
                 BigInteger totalTaskNum = taskRepository.countByIterationName(iterationName);
                 List<StoryPlan> planList = storyPlanRepository.findByIterationName(iterationName);
@@ -55,16 +58,18 @@ public class StoriePlanScheduleTask {
                 if (!StringUtils.isEmpty(iterationName)) {
                     String[] types = iterationName.split("-");
                     String[] etypes = iterationName.split("【");
-                    if (types != null && types.length == 2) {
+                    if (types.length == 2) {
                         storyPlan.setStoryType(types[0]);
                         storyPlan.setTaskType(types[1]);
-                    } else if (etypes != null && etypes.length == 2) {
+                    } else if (etypes.length == 2) {
                         storyPlan.setStoryType(etypes[0]);
-                        storyPlan.setTaskType("【"+etypes[1]);
+                        storyPlan.setTaskType("【" + etypes[1]);
                     }
                 }
                 Integer storynum = storyRepository.countByIterationName(iterationName);
-                if(storynum==null) storynum = 0;
+                if (storynum == null) {
+                    storynum = 0;
+                }
                 storyPlan.setStory_num(storynum);
                 storyPlan.setTask_num(totalTaskNum);
                 List<Map> typeEntities = taskRepository.findCountTaskType(iterationName);
@@ -111,10 +116,13 @@ public class StoriePlanScheduleTask {
                     }
                 }
                 Integer finishnum = taskRepository.countByIterationNameFinishNum(iterationName);
-                if(finishnum==null) finishnum = 0;
+                if (finishnum == null) {
+                    finishnum = 0;
+                }
                 storyPlan.setTotal_finish(getPresent(totalTaskNum, finishnum));
                 storyPlanRepository.save(storyPlan);
             }
+            logger.info("=========================>定时初始化需求计划表结束");
         }
     }
 
@@ -125,7 +133,7 @@ public class StoriePlanScheduleTask {
         NumberFormat numberFormat = NumberFormat.getInstance();
         numberFormat.setMaximumFractionDigits(2);
         String result = numberFormat.format((float) num / (float) totalnum.intValue() * 100);
-        Float f = Float.valueOf(result);
+        float f = Float.parseFloat(result);
         return String.valueOf(f/100);
     }
 }

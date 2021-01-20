@@ -10,7 +10,8 @@ import com.ext.tapd.tapd.dao.WorkspaceRepository;
 import com.ext.tapd.tapd.pojo.*;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.internal.LinkedTreeMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -21,14 +22,17 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import javax.transaction.Transactional;
 import java.util.*;
 
 /**
  * 更新缺陷表
+ * @author lx
  */
 @RestController
 @RequestMapping("/bugs")
 public class BugController {
+    private static Logger logger = LoggerFactory.getLogger(BugController.class);
     @Autowired
     private RestTemplate restTemplate;
     @Autowired
@@ -48,14 +52,18 @@ public class BugController {
     private String account;
 
 
-    //初始化task
+    /**
+     * 初始化BUG表
+     */
     @RequestMapping(value = "/initBugs", method = RequestMethod.GET)
+    @Transactional(rollbackOn = {Exception.class})
     public String initBugs() {
+        logger.info("=========================>初始化缺陷表开始");
         bugRepository.truncateBugs();
         String[] idsStr = ids.split(",");
         String[] workspaceIdsStr = workspaceIds.split(",");
         for (String workspaceId : idsStr) {
-            String search = "";
+            String search;
             if (Arrays.asList(workspaceIdsStr).contains(workspaceId)) {
                 search = "&status=resolved|suspended|new|in_progress|postponed|rejected|reopened|unconfirmed|closed";
             } else {
@@ -66,24 +74,19 @@ public class BugController {
             HttpHeaders headers = new HttpHeaders();
             headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString(account.getBytes()));
             int count = getCount(workspaceId, search);
-            int totalPage = 0;
+            logger.info("=========================>初始化缺陷表条数:"+count);
+            int totalPage;
             if (count > 200) {
                 totalPage = (count / 200) + 1;
                 for (int i = 1; i <= totalPage; i++) {
                     url = url + "&limit=200&page=" + i;
-                    //发送请求
-                    HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,   //GET请求
-                            new HttpEntity<>(null, headers),   //加入headers
-                            String.class);  //body响应数据接收类型
+                    /* url 发送请求地址 GET请求 加入headers body响应数据接收类型*/
+                    HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,new HttpEntity<>(null, headers),String.class);
                     String gson = ans.getBody();
-                    Gson g = new GsonBuilder()
-                            .setDateFormat("yyyy-MM-dd HH:mm:ss")
-                            .create();
+                    Gson g = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create();
                     ResultEntity vo = g.fromJson(gson, ResultEntity.class);
                     if (vo.getData().size() > 0) {
-                        for (LinkedTreeMap map : vo.getData()) {
-                            String gsonStr = g.toJson(map.get("Bug"));
-                            System.out.println(gsonStr);
+                        vo.getData().stream().map(map -> g.toJson(map.get("Bug"))).forEach(gsonStr -> {
                             Bug bug = g.fromJson(gsonStr, Bug.class);
                             bug.setPriority(PriorityEnum.getValue(bug.getPriority()));
                             bug.setSeverity(SeverityEnum.getValue(bug.getSeverity()));
@@ -97,24 +100,18 @@ public class BugController {
                                 bug.setStatus(statusMap.getName());
                             }
                             bugRepository.save(bug);
-                        }
+                        });
                     }
                 }
             } else {
                 url = url + "&limit=200";
-                //发送请求
-                HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,   //GET请求
-                        new HttpEntity<>(null, headers),   //加入headers
-                        String.class);  //body响应数据接收类型
+                /* url 发送请求地址 GET请求 加入headers body响应数据接收类型*/
+                HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,new HttpEntity<>(null, headers),String.class);
                 String gson = ans.getBody();
-                Gson g = new GsonBuilder()
-                        .setDateFormat("yyyy-MM-dd HH:mm:ss")
-                        .create();
+                Gson g = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create();
                 ResultEntity vo = g.fromJson(gson, ResultEntity.class);
                 if (vo.getData().size() > 0) {
-                    for (LinkedTreeMap map : vo.getData()) {
-                        String gsonStr = g.toJson(map.get("Bug"));
-                        System.out.println(gsonStr);
+                    vo.getData().stream().map(map -> g.toJson(map.get("Bug"))).forEach(gsonStr -> {
                         Bug bug = g.fromJson(gsonStr, Bug.class);
                         bug.setPriority(PriorityEnum.getValue(bug.getPriority()));
                         bug.setSeverity(SeverityEnum.getValue(bug.getSeverity()));
@@ -128,10 +125,11 @@ public class BugController {
                             bug.setStatus(statusMap.getName());
                         }
                         bugRepository.save(bug);
-                    }
+                    });
                 }
             }
         }
+        logger.info("=========================>初始化缺陷表结束");
         return "执行成功";
     }
 
@@ -140,19 +138,11 @@ public class BugController {
         //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
         HttpHeaders headers = new HttpHeaders();
         headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString(account.getBytes()));
-        //发送请求
-        HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,   //GET请求
-                new HttpEntity<>(null, headers),   //加入headers
-                String.class);  //body响应数据接收类型
-        System.out.println(ans);
+        /* url 发送请求地址 GET请求 加入headers body响应数据接收类型*/
+        HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,new HttpEntity<>(null, headers),String.class);
         String gson = ans.getBody();
-        System.out.println(gson);
-        Gson g = new GsonBuilder()
-                .setDateFormat("yyyy-MM-dd HH:mm:ss")
-                .create();
+        Gson g = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create();
         ResultCountEntity vo = g.fromJson(gson, ResultCountEntity.class);
-        Map map = vo.getData();
-        int count = new Double((Double) map.get("count")).intValue();
-        return count;
+        return ((Double) vo.getData().get("count")).intValue();
     }
 }

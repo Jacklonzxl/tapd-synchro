@@ -1,7 +1,13 @@
 package com.ext.tapd.tapd.common.status;
 
+/**
+ * 状态枚举
+ * @author lx
+ */
 public enum StatusEnum {
-    OPEN("open", "未开始"), PROGRESSING("progressing", "进行中"), DONE("done", "已完成");
+    OPEN("open", "未开始"),
+    PROGRESSING("progressing", "进行中"),
+    DONE("done", "已完成");
 
     private String code;
     private String name;
@@ -29,7 +35,9 @@ public enum StatusEnum {
 
     public static String getValue(String code) {
         for (StatusEnum el : values()) {
-            if (el.getCode().equals(code)) return el.getName();
+            if (el.getCode().equals(code)) {
+                return el.getName();
+            }
         }
         return null;
     }

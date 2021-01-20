@@ -8,6 +8,9 @@ import java.io.Serializable;
 import java.util.Date;
 
 
+/**
+ * @author lx
+ */
 @Entity
 @Table(name = "t_story_categories")
 public class StoryCategories implements Serializable {

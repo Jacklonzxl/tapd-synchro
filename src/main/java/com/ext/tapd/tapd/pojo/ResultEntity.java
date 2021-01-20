@@ -4,6 +4,9 @@ import com.google.gson.internal.LinkedTreeMap;
 
 import java.util.List;
 
+/**
+ * @author lx
+ */
 public class ResultEntity {
 
     private Integer status;

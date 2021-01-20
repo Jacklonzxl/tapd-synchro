@@ -2,6 +2,9 @@ package com.ext.tapd.tapd.pojo;
 
 import java.math.BigInteger;
 
+/**
+ * @author lx
+ */
 public class TaskTypeEntity {
 
     private BigInteger totalnum;

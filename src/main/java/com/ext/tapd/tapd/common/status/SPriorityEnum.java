@@ -1,7 +1,19 @@
 package com.ext.tapd.tapd.common.status;
 
+/**
+ * 紧急状态枚举
+ * @author lx
+ */
 public enum SPriorityEnum {
-    HIGH("4", "High"), MIDDLE("3", "Middle"), LOW("2", "Low"), NICETOHAVE("1", "NiceToHave");
+    //High
+    HIGH("4", "High"),
+    //Middle
+    MIDDLE("3", "Middle"),
+    //Low
+    LOW("2", "Low"),
+    //NiceToHave
+    NICETOHAVE("1", "NiceToHave");
+
     private String id;
     private String name;
 
@@ -28,7 +40,9 @@ public enum SPriorityEnum {
 
     public static String getValue(String code) {
         for (SPriorityEnum el : values()) {
-            if (el.getId().equals(code)) return el.getName();
+            if (el.getId().equals(code)) {
+                return el.getName();
+            }
         }
         return null;
     }
