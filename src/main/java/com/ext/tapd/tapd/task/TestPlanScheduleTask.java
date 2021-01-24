@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -16,6 +17,9 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
 import javax.transaction.Transactional;
@@ -51,13 +55,14 @@ public class TestPlanScheduleTask {
     @Value("${task.schedule.enabled}")
     private boolean scheduleEnabled;
 
-    @Scheduled(cron = "${cron:0 0/35 * * * ?}")
+    @Scheduled(cron = "${cron:0 0/40 * * * ?}")
     @Async
     public void testPlan() {
         if(scheduleEnabled){
             logger.info("=========================>开始同步测试计划");
             initTask();
-            initRelaxtion();
+//           int re laxnum = initRelaxtion();
+//            logger.info("=========================>relaxnum:"+relaxnum);
             try {
                 updateTestPlan();
             } catch (ParseException e) {
@@ -69,85 +74,9 @@ public class TestPlanScheduleTask {
 
 
     /**
-     * 更新测试计划统计数据
-     */
-    private void updateTestPlan() throws ParseException {
-        cleanStatistics();
-        Iterable<TestPlan> testPlans = testPlanRepository.findAll();
-        Iterator<TestPlan> iterator = testPlans.iterator();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        String s = sdf.format(new Date());
-        Date today = sdf.parse(s);
-        while (iterator.hasNext()) {
-            TestPlan testPlan = iterator.next();
-            Date startDate = testPlan.getStart_date();
-            Date endDate = testPlan.getEnd_date();
-            Optional<Workspace> workspace = workspaceRepository.findById(testPlan.getWorkspace_id());
-            String workspaceName = "";
-            if(workspace.isPresent()) {
-                workspaceName = workspace.get().getName();
-            }
-
-            //修改了计划时间，重新修改数据
-            List<TestStatistics> statisticsList = statisticsRepository.findByName(testPlan.getName());
-            if(!CollectionUtils.isEmpty(statisticsList)){
-                for(TestStatistics testStatistics : statisticsList){
-                    if(!isEffectiveDate(testStatistics.getPlanDate(),startDate,endDate)){
-                        statisticsRepository.delete(testStatistics);
-                    }
-                }
-            }
-
-            while (startDate.compareTo(endDate) < 0) {
-                TestStatistics statistics = new TestStatistics();
-                statistics.setName(testPlan.getName());
-                statistics.setPlanDate(startDate);
-                statistics.setWorkspace_name(workspaceName);
-                TestStatistics temp = statisticsRepository.findByNameAndPlanDate(testPlan.getName(), startDate);
-                if (startDate.compareTo(today) == 0 && Objects.nonNull(temp)) {
-                    temp.setWorkspace_name(workspaceName);
-                    temp = statisticsRepository.findByNameAndPlanDate(testPlan.getName(), startDate);
-                    Implementation implementation = getRate(testPlan.getId(), testPlan.getWorkspace_id());
-                    temp.setCoverage(transaleFloat(getCoverage(testPlan.getId(), implementation.getStory_count())));
-                    temp.setImplementRate(transaleFloat(implementation.getExecuted_rate()));
-                    temp.setPassRate(transaleFloat(getPassRate(implementation)));
-                    statisticsRepository.save(temp);
-                }
-                if (temp == null) {
-                    statisticsRepository.save(statistics);
-                }
-                Calendar calendar = new GregorianCalendar();
-                calendar.setTime(startDate);
-                calendar.add(Calendar.DATE, 1);
-                startDate = calendar.getTime();
-            }
-            if (startDate.compareTo(endDate) == 0) {
-                TestStatistics statistics = new TestStatistics();
-                statistics.setName(testPlan.getName());
-                statistics.setPlanDate(startDate);
-                statistics.setWorkspace_name(workspaceName);
-                TestStatistics temp = statisticsRepository.findByNameAndPlanDate(testPlan.getName(), startDate);
-                if (temp == null) {
-                    statisticsRepository.save(statistics);
-                } else if (startDate.compareTo(today) == 0) {
-                    temp.setWorkspace_name(workspaceName);
-                    temp = statisticsRepository.findByNameAndPlanDate(testPlan.getName(), startDate);
-                    Implementation implementation = getRate(testPlan.getId(), testPlan.getWorkspace_id());
-                    temp.setCoverage(transaleFloat(getCoverage(testPlan.getId(), implementation.getStory_count())));
-                    temp.setImplementRate(transaleFloat(implementation.getExecuted_rate()));
-                    temp.setPassRate(transaleFloat(getPassRate(implementation)));
-                    statisticsRepository.save(temp);
-                }
-            }
-        }
-    }
-
-
-    /**
      * 初始化测试计划表
      */
-    @Transactional(rollbackOn = {Exception.class})
-    public void initTask() {
+    private void initTask() {
         testPlanRepository.truncateTable();
         List<Workspace> workspaces = (List<Workspace>) workspaceRepository.findAll();
         for (Workspace workspace : workspaces) {
@@ -201,10 +130,84 @@ public class TestPlanScheduleTask {
     }
 
     /**
+     * 更新测试计划统计数据
+     */
+    private void updateTestPlan() throws ParseException {
+        cleanStatistics();
+        updateWorkSpaceName();
+        Iterable<TestPlan> testPlans = testPlanRepository.findAll();
+        Iterator<TestPlan> iterator = testPlans.iterator();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String s = sdf.format(new Date());
+        Date today = sdf.parse(s);
+        while (iterator.hasNext()) {
+            TestPlan testPlan = iterator.next();
+            Date startDate = testPlan.getStart_date();
+            Date endDate = testPlan.getEnd_date();
+            Optional<Workspace> workspace = workspaceRepository.findById(testPlan.getWorkspaceId());
+            String workspaceName = "";
+            if(workspace.isPresent()) {
+                workspaceName = workspace.get().getName();
+            }
+
+            //修改了计划时间，重新修改数据
+            List<TestStatistics> statisticsList = statisticsRepository.findByName(testPlan.getName());
+            if(!CollectionUtils.isEmpty(statisticsList)){
+                for(TestStatistics testStatistics : statisticsList){
+                    if(!isEffectiveDate(testStatistics.getPlanDate(),startDate,endDate)){
+                        statisticsRepository.delete(testStatistics);
+                    }
+                }
+            }
+
+            while (startDate.compareTo(endDate) < 0) {
+                TestStatistics statistics = new TestStatistics();
+                statistics.setName(testPlan.getName());
+                statistics.setPlanDate(startDate);
+                statistics.setWorkspace_name(workspaceName);
+                TestStatistics temp = statisticsRepository.findByNameAndPlanDate(testPlan.getName(), startDate);
+                if (startDate.compareTo(today) == 0 && Objects.nonNull(temp)) {
+                    temp = statisticsRepository.findByNameAndPlanDate(testPlan.getName(), startDate);
+                    Implementation implementation = getRate(testPlan.getId(), testPlan.getWorkspaceId());
+                    temp.setCoverage(transaleFloat(getCoverage(testPlan.getId(), implementation.getStory_count())));
+                    temp.setImplementRate(transaleFloat(implementation.getExecuted_rate()));
+                    temp.setPassRate(transaleFloat(getPassRate(implementation)));
+                    temp.setWorkspace_name(workspaceName);
+                    statisticsRepository.save(temp);
+                }
+                if (temp == null) {
+                    statisticsRepository.save(statistics);
+                }
+                Calendar calendar = new GregorianCalendar();
+                calendar.setTime(startDate);
+                calendar.add(Calendar.DATE, 1);
+                startDate = calendar.getTime();
+            }
+            if (startDate.compareTo(endDate) == 0) {
+                TestStatistics statistics = new TestStatistics();
+                statistics.setName(testPlan.getName());
+                statistics.setPlanDate(startDate);
+                statistics.setWorkspace_name(workspaceName);
+                TestStatistics temp = statisticsRepository.findByNameAndPlanDate(testPlan.getName(), startDate);
+                if (temp == null) {
+                    statisticsRepository.save(statistics);
+                } else if (startDate.compareTo(today) == 0) {
+                    temp = statisticsRepository.findByNameAndPlanDate(testPlan.getName(), startDate);
+                    Implementation implementation = getRate(testPlan.getId(), testPlan.getWorkspaceId());
+                    temp.setCoverage(transaleFloat(getCoverage(testPlan.getId(), implementation.getStory_count())));
+                    temp.setImplementRate(transaleFloat(implementation.getExecuted_rate()));
+                    temp.setPassRate(transaleFloat(getPassRate(implementation)));
+                    temp.setWorkspace_name(workspaceName);
+                    statisticsRepository.save(temp);
+                }
+            }
+        }
+    }
+
+    /**
      * 初始化测试需求关系表
      */
-    @Transactional(rollbackOn = {Exception.class})
-    public void initRelaxtion() {
+    private void initRelation() {
         tcaseRepository.truncateTable();
         List<Story> stories = (List<Story>) storyRepository.findAll();
         for (Story story : stories) {
@@ -242,7 +245,6 @@ public class TestPlanScheduleTask {
         ResultImplementionEntity vo = g.fromJson(gson, ResultImplementionEntity.class);
         return vo.getData();
     }
-
     /**
      * 获取覆盖率
      */
@@ -276,7 +278,7 @@ public class TestPlanScheduleTask {
      * @return 数值
      */
     private String transaleFloat(String present) {
-        if ("%".contains(present)) {
+        if (present.contains("%")) {
             present = present.replaceAll("%", "");
             float f = Float.parseFloat(present);
             return String.valueOf(f/100);
@@ -291,7 +293,7 @@ public class TestPlanScheduleTask {
      * @param endTime   结束时间
      * @author sunran   判断当前时间在时间区间内
      */
-    public boolean isEffectiveDate(Date nowTime, Date startTime, Date endTime) {
+    private boolean isEffectiveDate(Date nowTime, Date startTime, Date endTime) {
         if (nowTime.getTime() == startTime.getTime()
                 || nowTime.getTime() == endTime.getTime()) {
             return true;
@@ -319,6 +321,27 @@ public class TestPlanScheduleTask {
             if(!CollectionUtils.isEmpty(testStatistics)){
                 for(TestStatistics statistics : testStatistics){
                     statisticsRepository.delete(statistics);
+                }
+            }
+        }
+    }
+
+    /**
+     * 更新项目名称
+     */
+    private void updateWorkSpaceName(){
+        Iterable<TestPlan> testPlans = testPlanRepository.findAll();
+        for (TestPlan testPlan : testPlans) {
+            Optional<Workspace> workspace = workspaceRepository.findById(testPlan.getWorkspaceId());
+            String workspaceName = "";
+            if (workspace.isPresent()) {
+                workspaceName = workspace.get().getName();
+            }
+            List<TestStatistics> statisticsList = statisticsRepository.findByName(testPlan.getName());
+            if (!CollectionUtils.isEmpty(statisticsList)) {
+                for (TestStatistics testStatistics : statisticsList) {
+                    testStatistics.setWorkspace_name(workspaceName);
+                    statisticsRepository.save(testStatistics);
                 }
             }
         }

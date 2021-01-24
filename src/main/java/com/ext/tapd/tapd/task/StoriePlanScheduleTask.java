@@ -44,6 +44,7 @@ public class StoriePlanScheduleTask {
     @Async
     public void initTask() {
         if(scheduleEnabled){
+            storyPlanRepository.truncateTable();
             logger.info("=========================>定时初始化需求计划表开始");
             Iterable<Iteration> iterable = iterationRepository.findAll();
             for (Iteration iteration : iterable) {

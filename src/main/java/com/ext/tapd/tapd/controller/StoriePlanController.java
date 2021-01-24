@@ -41,6 +41,7 @@ public class StoriePlanController {
     @Transactional(rollbackOn = {Exception.class})
     public String initTask() {
         logger.info("=========================>更新需求计划表开始");
+        storyPlanRepository.truncateTable();
         Iterable<Iteration> iterable = iterationRepository.findAll();
         for (Iteration iteration : iterable) {
             String iterationName = iteration.getName();

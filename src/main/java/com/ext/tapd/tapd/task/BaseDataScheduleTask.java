@@ -41,7 +41,7 @@ public class BaseDataScheduleTask {
     @Value("${task.schedule.enabled}")
     private boolean scheduleEnabled;
 
-    @Scheduled(cron = "${cron:0 0/10 0/1 * * ?}") //每1小时执行一次
+    @Scheduled(cron = "${cron:0 0/30 * * * ?}") //每1小时执行一次
     @Async
     public void task() {
         if(scheduleEnabled){

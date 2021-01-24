@@ -7,6 +7,7 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
 
 import javax.transaction.Transactional;
+import java.util.List;
 
 /**
  * @author lx
@@ -30,4 +31,7 @@ public interface StoryRepository extends CrudRepository<Story, Long> {
      */
     @Query(value = "SELECT count(id) FROM t_stories WHERE iteration_name = :iterationName AND `status` not in ('删除','已拒绝')", nativeQuery = true)
     Integer countByIterationName(@Param("iterationName") String iterationName);
+
+    @Query(value="SELECT * FROM t_stories where status not in ('删除','已拒绝') " , nativeQuery = true)
+    List<Story> findAllByDate();
 }

@@ -47,13 +47,15 @@ public class TestPlanController {
 
     @Value("${tapd.account}")
     private String account;
+    @Value("${workspace.ids}")
+    private String workspaceIds;
 
     @RequestMapping(value = "/initTestPlan", method = RequestMethod.GET)
     @Transactional(rollbackOn = {Exception.class})
-    public String initTestPlan(){
+    public String initTestPlan() {
         logger.info("=========================>更新测试计划表开始");
         initTask();
-        initRelation();
+//        initRelation();
         try {
             updateTestPlan();
         } catch (ParseException e) {
@@ -63,6 +65,18 @@ public class TestPlanController {
         return "测试计划更新成功";
     }
 
+    @RequestMapping(value = "/test", method = RequestMethod.GET)
+    @Transactional(rollbackOn = {Exception.class})
+    public String test() {
+        logger.info("=========================>更新测试计划表开始");
+        getTestStoryPlanCase();
+        logger.info("=========================>更新测试计划表结束");
+        return "测试计划更新成功";
+    }
+
+    /**
+     * 初始化测试计划表
+     */
     private void initTask() {
         testPlanRepository.truncateTable();
         List<Workspace> workspaces = (List<Workspace>) workspaceRepository.findAll();
@@ -77,7 +91,7 @@ public class TestPlanController {
                 totalPage = (count / 200) + 1;
                 for (int i = 1; i <= totalPage; i++) {
                     url = url + "&limit=200&page=" + i;
-                    HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,new HttpEntity<>(null, headers),String.class);
+                    HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(null, headers), String.class);
                     String gson = ans.getBody();
                     Gson g = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create();
                     ResultEntity vo = g.fromJson(gson, ResultEntity.class);
@@ -90,7 +104,7 @@ public class TestPlanController {
                 }
             } else {
                 url = url + "&limit=200";
-                HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,new HttpEntity<>(null, headers),String.class);
+                HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(null, headers), String.class);
                 String gson = ans.getBody();
                 Gson g = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create();
                 ResultEntity vo = g.fromJson(gson, ResultEntity.class);
@@ -109,13 +123,16 @@ public class TestPlanController {
         //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
         HttpHeaders headers = new HttpHeaders();
         headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString(account.getBytes()));
-        HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,new HttpEntity<>(null, headers),String.class);
+        HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(null, headers), String.class);
         String gson = ans.getBody();
         Gson g = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create();
         ResultCountEntity vo = g.fromJson(gson, ResultCountEntity.class);
         return ((Double) vo.getData().get("count")).intValue();
     }
 
+    /**
+     * 更新测试计划统计数据
+     */
     private void updateTestPlan() throws ParseException {
         cleanStatistics();
         updateWorkSpaceName();
@@ -128,17 +145,17 @@ public class TestPlanController {
             TestPlan testPlan = iterator.next();
             Date startDate = testPlan.getStart_date();
             Date endDate = testPlan.getEnd_date();
-            Optional<Workspace> workspace = workspaceRepository.findById(testPlan.getWorkspace_id());
+            Optional<Workspace> workspace = workspaceRepository.findById(testPlan.getWorkspaceId());
             String workspaceName = "";
-            if(workspace.isPresent()) {
+            if (workspace.isPresent()) {
                 workspaceName = workspace.get().getName();
             }
 
             //修改了计划时间，重新修改数据
             List<TestStatistics> statisticsList = statisticsRepository.findByName(testPlan.getName());
-            if(!CollectionUtils.isEmpty(statisticsList)){
-                for(TestStatistics testStatistics : statisticsList){
-                    if(!isEffectiveDate(testStatistics.getPlanDate(),startDate,endDate)){
+            if (!CollectionUtils.isEmpty(statisticsList)) {
+                for (TestStatistics testStatistics : statisticsList) {
+                    if (!isEffectiveDate(testStatistics.getPlanDate(), startDate, endDate)) {
                         statisticsRepository.delete(testStatistics);
                     }
                 }
@@ -152,7 +169,7 @@ public class TestPlanController {
                 TestStatistics temp = statisticsRepository.findByNameAndPlanDate(testPlan.getName(), startDate);
                 if (startDate.compareTo(today) == 0 && Objects.nonNull(temp)) {
                     temp = statisticsRepository.findByNameAndPlanDate(testPlan.getName(), startDate);
-                    Implementation implementation = getRate(testPlan.getId(), testPlan.getWorkspace_id());
+                    Implementation implementation = getRate(testPlan.getId(), testPlan.getWorkspaceId());
                     temp.setCoverage(transaleFloat(getCoverage(testPlan.getId(), implementation.getStory_count())));
                     temp.setImplementRate(transaleFloat(implementation.getExecuted_rate()));
                     temp.setPassRate(transaleFloat(getPassRate(implementation)));
@@ -177,7 +194,7 @@ public class TestPlanController {
                     statisticsRepository.save(statistics);
                 } else if (startDate.compareTo(today) == 0) {
                     temp = statisticsRepository.findByNameAndPlanDate(testPlan.getName(), startDate);
-                    Implementation implementation = getRate(testPlan.getId(), testPlan.getWorkspace_id());
+                    Implementation implementation = getRate(testPlan.getId(), testPlan.getWorkspaceId());
                     temp.setCoverage(transaleFloat(getCoverage(testPlan.getId(), implementation.getStory_count())));
                     temp.setImplementRate(transaleFloat(implementation.getExecuted_rate()));
                     temp.setPassRate(transaleFloat(getPassRate(implementation)));
@@ -188,42 +205,83 @@ public class TestPlanController {
         }
     }
 
+    /**
+     * 初始化测试需求关系表
+     */
+//    private void initRelation() {
+//        tcaseRepository.truncateTable();
+//        List<Story> stories = (List<Story>) storyRepository.findAll();
+//        for (Story story : stories) {
+//            String url = "https://api.tapd.cn/stories/get_story_tcase?workspace_id=" + story.getWorkspace_id() + "&story_id=" + story.getId();
+//            //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
+//            HttpHeaders headers = new HttpHeaders();
+//            headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString(account.getBytes()));
+//            HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,new HttpEntity<>(null, headers),String.class);
+//            String gson = ans.getBody();
+//            Gson g = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create();
+//            ResultTestPlanStoryTcaseRelationEntity vo = g.fromJson(gson, ResultTestPlanStoryTcaseRelationEntity.class);
+//            List<TcaseRelationEntity> tcaseRelations = vo.getData();
+//            if (!CollectionUtils.isEmpty(tcaseRelations)) {
+//                if (tcaseRelations.size() > 0) {
+//                    for (TcaseRelationEntity tcaseRelation : tcaseRelations) {
+//                        tcaseRepository.save(tcaseRelation.getTestPlanStoryTcaseRelation());
+//                    }
+//                }
+//            }
+//
+//        }
+//    }
+    private void getTestStoryPlanCase() {
+        int num=0;
+        tcaseRepository.truncateTable();
+        String[] wIds = workspaceIds.split(",");
+        for (String wId : wIds) {
+            List<TestPlan> testPlans = testPlanRepository.findByWorkspaceId(Long.parseLong(wId));
+            if (!CollectionUtils.isEmpty(testPlans) && testPlans.size() > 0) {
+                for (TestPlan testPlan : testPlans) {
+                    num++;
+                    String url = "https://api.tapd.cn/test_plans/get_test_plan_tcase?workspace_id=" + wId + "&test_plan_id=" + testPlan.getId();
+                    //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
+                    HttpHeaders headers = new HttpHeaders();
+                    headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString(account.getBytes()));
+                    HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(null, headers), String.class);
+                    String gson = ans.getBody();
+                    Gson g = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create();
+                    ResultTestPlanStoryTcaseRelationEntity vo = g.fromJson(gson, ResultTestPlanStoryTcaseRelationEntity.class);
+                    logger.info(gson);
+                    List<TcaseRelationEntity> tcaseRelations = vo.getData();
+                    if (!CollectionUtils.isEmpty(tcaseRelations)) {
+                        if (tcaseRelations.size() > 0) {
+                            for (TcaseRelationEntity tcaseRelation : tcaseRelations) {
+                                tcaseRepository.save(tcaseRelation.getTestPlanStoryTcaseRelation());
+                            }
+                        }
+                    }
+                }
+            }
+
+        }
+        logger.info("================>总共请求了:"+num);
+    }
+
+    /**
+     * 获取执行率
+     */
     private Implementation getRate(Long testPlanId, Long workspaceId) {
         String url = "https://api.tapd.cn/test_plans/progress?id=" + testPlanId + "&workspace_id=" + workspaceId;
         //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
         HttpHeaders headers = new HttpHeaders();
         headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString(account.getBytes()));
-        HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,new HttpEntity<>(null, headers),String.class);
+        HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(null, headers), String.class);
         String gson = ans.getBody();
         Gson g = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create();
         ResultImplementionEntity vo = g.fromJson(gson, ResultImplementionEntity.class);
         return vo.getData();
     }
 
-    private void initRelation() {
-        tcaseRepository.truncateTable();
-        List<Story> stories = (List<Story>) storyRepository.findAll();
-        for (Story story : stories) {
-            String url = "https://api.tapd.cn/stories/get_story_tcase?workspace_id=" + story.getWorkspace_id() + "&story_id=" + story.getId();
-            //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString(account.getBytes()));
-            HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,new HttpEntity<>(null, headers),String.class);
-            String gson = ans.getBody();
-            Gson g = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create();
-            ResultTestPlanStoryTcaseRelationEntity vo = g.fromJson(gson, ResultTestPlanStoryTcaseRelationEntity.class);
-            List<TcaseRelationEntity> tcaseRelations = vo.getData();
-            if (!CollectionUtils.isEmpty(tcaseRelations)) {
-                if (tcaseRelations.size() > 0) {
-                    for (TcaseRelationEntity tcaseRelation : tcaseRelations) {
-                        tcaseRepository.save(tcaseRelation.getTestPlanStoryTcaseRelation());
-                    }
-                }
-            }
-
-        }
-    }
-
+    /**
+     * 获取覆盖率
+     */
     private String getCoverage(Long testPlanId, int storyCount) {
         if (storyCount == 0) {
             return "0%";
@@ -235,6 +293,9 @@ public class TestPlanController {
         return result + "%";
     }
 
+    /**
+     * 获取通过率
+     */
     private String getPassRate(Implementation implementation) {
         if ((implementation.getTcase_count() - implementation.getStatus_counter().getUnexecuted()) <= 0) {
             return "0%";
@@ -245,17 +306,22 @@ public class TestPlanController {
         return result + "%";
     }
 
+    /**
+     * 转换百分比
+     *
+     * @param present 百分数
+     * @return 数值
+     */
     private String transaleFloat(String present) {
         if (present.contains("%")) {
             present = present.replaceAll("%", "");
             float f = Float.parseFloat(present);
-            return String.valueOf(f/100);
+            return String.valueOf(f / 100);
         }
-       return "0";
+        return "0";
     }
 
     /**
-     *
      * @param nowTime   当前时间
      * @param startTime 开始时间
      * @param endTime   结束时间
@@ -282,12 +348,12 @@ public class TestPlanController {
     /**
      * 清理不存在的计划
      */
-    private void cleanStatistics(){
+    private void cleanStatistics() {
         List<String> testPlans = testPlanRepository.findName();
-        if(!CollectionUtils.isEmpty(testPlans)){
-            List<TestStatistics> testStatistics =  statisticsRepository.findByNames(testPlans);
-            if(!CollectionUtils.isEmpty(testStatistics)){
-                for(TestStatistics statistics : testStatistics){
+        if (!CollectionUtils.isEmpty(testPlans)) {
+            List<TestStatistics> testStatistics = statisticsRepository.findByNames(testPlans);
+            if (!CollectionUtils.isEmpty(testStatistics)) {
+                for (TestStatistics statistics : testStatistics) {
                     statisticsRepository.delete(statistics);
                 }
             }
@@ -297,10 +363,10 @@ public class TestPlanController {
     /**
      * 更新项目名称
      */
-    private void updateWorkSpaceName(){
+    private void updateWorkSpaceName() {
         Iterable<TestPlan> testPlans = testPlanRepository.findAll();
         for (TestPlan testPlan : testPlans) {
-            Optional<Workspace> workspace = workspaceRepository.findById(testPlan.getWorkspace_id());
+            Optional<Workspace> workspace = workspaceRepository.findById(testPlan.getWorkspaceId());
             String workspaceName = "";
             if (workspace.isPresent()) {
                 workspaceName = workspace.get().getName();

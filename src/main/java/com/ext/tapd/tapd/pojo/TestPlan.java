@@ -20,7 +20,8 @@ public class TestPlan implements Serializable {
     private Long id;
 
     //项目ID
-    private Long workspace_id;
+    @Column(name = "workspace_id")
+    private Long workspaceId;
     //用例名称
     private String name;
     //需求分类描述
@@ -107,12 +108,12 @@ public class TestPlan implements Serializable {
         this.id = id;
     }
 
-    public Long getWorkspace_id() {
-        return workspace_id;
+    public Long getWorkspaceId() {
+        return workspaceId;
     }
 
-    public void setWorkspace_id(Long workspace_id) {
-        this.workspace_id = workspace_id;
+    public void setWorkspaceId(Long workspaceId) {
+        this.workspaceId = workspaceId;
     }
 
     public String getName() {

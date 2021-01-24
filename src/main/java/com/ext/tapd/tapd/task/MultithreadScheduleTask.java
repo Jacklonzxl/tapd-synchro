@@ -65,87 +65,93 @@ public class MultithreadScheduleTask {
     @Scheduled(cron = "${cron:0 0/30 * * * ?}")
     @Async
     public void task() {
-        if(scheduleEnabled){
+        if (scheduleEnabled) {
             Date now = new Date();
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
             String modified = sdf.format(now);
-            excuteTask("tasks", modified);
+            int tasknum = excuteTask("tasks", modified);
+            logger.info("=========================>tasknum:"+tasknum);
         }
     }
 
     /**
      * 每半小时执行一次
      */
-    @Scheduled(cron = "${cron:0 0/31 * * * ?}")
+    @Scheduled(cron = "${cron:0 0/30 * * * ?}")
     @Async
     public void bug() {
-        if(scheduleEnabled){
+        if (scheduleEnabled) {
             Date now = new Date();
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
             String modified = sdf.format(now);
-            excuteTask("bugs", modified);
+            int bugsnum =excuteTask("bugs", modified);
+            logger.info("=========================>bugsnum:"+bugsnum);
         }
     }
 
     /**
      * 每半小时执行一次
      */
-    @Scheduled(cron = "${cron:0 0/32 * * * ?}")
+    @Scheduled(cron = "${cron:0 0/30 * * * ?}")
     @Async
     public void story() {
-        if(scheduleEnabled){
+        if (scheduleEnabled) {
             Date now = new Date();
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
             String modified = sdf.format(now);
-            excuteTask("stories", modified);
+            int storiesnum = excuteTask("stories", modified);
+            logger.info("=========================>storiesnum:"+storiesnum);
         }
     }
 
     /**
      * 每半小时执行一次
      */
-    @Scheduled(cron = "${cron:0 0/33 * * * ?}")
+    @Scheduled(cron = "${cron:0 0/30 * * * ?}")
     @Async
     public void iteration() {
-        if(scheduleEnabled){
+        if (scheduleEnabled) {
             Date now = new Date();
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
             String modified = sdf.format(now);
-            excuteTask("iterations", modified);
+            int iterations =excuteTask("iterations", modified);
+            logger.info("=========================>iterations:"+iterations);
         }
     }
 
-    private void excuteTask(String type, String modified) {
+    private int excuteTask(String type, String modified) {
         String[] idsStr = ids.split(",");
         if ("bugs".equals(type)) {
             idsStr = projectIds.split(",");
         }
+        int requestnum = 0;
         for (String workspaceId : idsStr) {
             AtomicReference<String> url = new AtomicReference<>("https://api.tapd.cn/" + type + "?workspace_id=" + workspaceId + "&modified=>" + modified);
             //在请求头信息中携带Basic认证信息(这里才是实际Basic认证传递用户名密码的方式)
             headers.set("authorization", "Basic " + Base64.getEncoder().encodeToString(account.getBytes()));
-            logger.info("=========================>定时初始化"+type+"表开始");
+//            logger.info("=========================>定时初始化" + type + "表开始");
             switch (type) {
                 case "bugs":
-                    saveBug(workspaceId, modified, url.get());
+                    requestnum = requestnum + saveBug(workspaceId, modified, url.get());
                     break;
                 case "tasks":
-                    saveTask(workspaceId, modified, url.get());
+                    requestnum = requestnum + saveTask(workspaceId, modified, url.get());
                     break;
                 case "stories":
-                    saveStory(workspaceId, modified, url.get());
+                    requestnum = requestnum + saveStory(workspaceId, modified, url.get());
                     break;
                 case "iterations":
-                    saveIteration(workspaceId, modified, url.get());
+                    requestnum = requestnum + saveIteration(workspaceId, modified, url.get());
                     break;
                 default:
                     break;
             }
-            logger.info("=========================>定时初始化"+type+"表结束");
+//            logger.info("=========================>定时初始化" + type + "表结束");
         }
+        return requestnum;
     }
 
-    private void saveBug(String workspaceId, String modified, String url) {
+    private int saveBug(String workspaceId, String modified, String url) {
         String[] workspaceIdsStr = ids.split(",");
         String search;
         if (Arrays.asList(workspaceIdsStr).contains(workspaceId)) {
@@ -154,13 +160,15 @@ public class MultithreadScheduleTask {
             search = "&status=resolved|suspended|new|in_progress|postponed|rejected|reopened|unconfirmed";
         }
         int count = getCount(workspaceId, "bugs", modified, search);
-        logger.info("=========================>定时初始化缺陷表总数:"+count);
+        logger.info("=========================>定时初始化缺陷表总数:" + count);
+        int requestnum = 1;
         int totalPage;
         if (count > 200) {
             totalPage = (count / 200) + 1;
+            requestnum = requestnum + totalPage;
             for (int i = 1; i <= totalPage; i++) {
                 url = url + search + "&limit=200&page=" + i;
-                HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,new HttpEntity<>(null, headers),String.class);
+                HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(null, headers), String.class);
                 String gson = ans.getBody();
                 Gson g = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create();
                 ResultEntity vo = g.fromJson(gson, ResultEntity.class);
@@ -182,9 +190,10 @@ public class MultithreadScheduleTask {
                     });
                 }
             }
-        } else {
+        } else if (count<200 && count > 0) {
+            requestnum = requestnum + 1;
             url = url + search + "&limit=200";
-            HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,new HttpEntity<>(null, headers),String.class);
+            HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(null, headers), String.class);
             String gson = ans.getBody();
             Gson g = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create();
             ResultEntity vo = g.fromJson(gson, ResultEntity.class);
@@ -206,17 +215,20 @@ public class MultithreadScheduleTask {
                 });
             }
         }
+        return requestnum;
     }
 
-    private void saveIteration(String workspaceId, String modified, String url) {
+    private int saveIteration(String workspaceId, String modified, String url) {
         int count = getCount(workspaceId, "iterations", modified, "");
-        logger.info("=========================>定时初始化迭代表总数:"+count);
+        int requestnum = 1;
+        logger.info("=========================>定时初始化迭代表总数:" + count);
         int totalPage;
         if (count > 200) {
             totalPage = (count / 200) + 1;
+            requestnum = requestnum + totalPage;
             for (int i = 1; i <= totalPage; i++) {
                 url = url + "&limit=200&page=" + i;
-                HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,new HttpEntity<>(null, headers),String.class);
+                HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(null, headers), String.class);
                 String gson = ans.getBody();
                 Gson g = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create();
                 ResultEntity vo = g.fromJson(gson, ResultEntity.class);
@@ -229,10 +241,11 @@ public class MultithreadScheduleTask {
                     });
                 }
             }
-        } else {
+        } else if(count<200 && count>0){
+            requestnum = requestnum + 1;
             url = url + "&limit=200";
             //发送请求
-            HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,new HttpEntity<>(null, headers),String.class);
+            HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(null, headers), String.class);
             String gson = ans.getBody();
             Gson g = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create();
             ResultEntity vo = g.fromJson(gson, ResultEntity.class);
@@ -245,17 +258,20 @@ public class MultithreadScheduleTask {
                 });
             }
         }
+        return requestnum;
     }
 
-    private void saveTask(String workspaceId, String modified, String url) {
+    private int saveTask(String workspaceId, String modified, String url) {
+        int requestnum = 1;
         int count = getCount(workspaceId, "tasks", modified, "");
-        logger.info("=========================>定时初始化任务表总数:"+count);
+        logger.info("=========================>定时初始化任务表总数:" + count);
         AtomicInteger totalPage = new AtomicInteger();
         if (count > 200) {
             totalPage.set((count / 200) + 1);
+            requestnum = requestnum + totalPage.get();
             for (int i = 1; i <= totalPage.get(); i++) {
                 url = url + "&limit=200&page=" + i;
-                HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,new HttpEntity<>(null, headers),String.class);
+                HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(null, headers), String.class);
                 String gson = ans.getBody();
                 Gson g = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create();
                 ResultEntity vo = g.fromJson(gson, ResultEntity.class);
@@ -275,10 +291,11 @@ public class MultithreadScheduleTask {
                     });
                 }
             }
-        } else {
+        } else if(count<200 && count>0){
+            requestnum = requestnum + 1;
             url = url + "&limit=200";
             //发送请求
-            HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,new HttpEntity<>(null, headers),String.class);
+            HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(null, headers), String.class);
             String gson = ans.getBody();
             Gson g = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create();
             ResultEntity vo = g.fromJson(gson, ResultEntity.class);
@@ -298,18 +315,21 @@ public class MultithreadScheduleTask {
                 });
             }
         }
+        return  requestnum;
     }
 
-    private void saveStory(String workspaceId, String modified, String url) {
+    private int saveStory(String workspaceId, String modified, String url) {
+        int requestnum = 1;
         int count = getCount(workspaceId, "stories", modified, "");
-        logger.info("=========================>定时初始化需求表总数:"+count);
+        logger.info("=========================>定时初始化需求表总数:" + count);
         int totalPage;
         if (count > 200) {
+            requestnum = requestnum + count;
             totalPage = (count / 200) + 1;
             for (int i = 1; i <= totalPage; i++) {
                 url = url + "&limit=200&page=" + i;
                 //发送请求
-                HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,new HttpEntity<>(null, headers),String.class);
+                HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(null, headers), String.class);
                 String gson = ans.getBody();
                 Gson g = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create();
                 ResultEntity vo = g.fromJson(gson, ResultEntity.class);
@@ -331,10 +351,11 @@ public class MultithreadScheduleTask {
                     });
                 }
             }
-        } else {
+        } else if(count<200 && count>0) {
+            requestnum = requestnum + 1;
             url = url + "&limit=200";
             //发送请求
-            HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,new HttpEntity<>(null, headers),String.class);
+            HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(null, headers), String.class);
             String gson = ans.getBody();
             Gson g = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create();
             ResultEntity vo = g.fromJson(gson, ResultEntity.class);
@@ -356,13 +377,16 @@ public class MultithreadScheduleTask {
                 });
             }
         }
+        return requestnum;
     }
 
     private int getCount(final String workspaceId, final String type, String modified, String search) {
         String url = "https://api.tapd.cn/" + type + "/count?workspace_id=" + workspaceId + "&modified=>" + modified;
-        if ("bugs".equals(type)){ url = url + search;}
+        if ("bugs".equals(type)) {
+            url = url + search;
+        }
         //发送请求
-        HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET,new HttpEntity<>(null, headers),String.class);
+        HttpEntity<String> ans = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(null, headers), String.class);
         String gson = ans.getBody();
         Gson g = new GsonBuilder().setDateFormat("yyyy-MM-dd HH:mm:ss").create();
         ResultCountEntity vo = g.fromJson(gson, ResultCountEntity.class);

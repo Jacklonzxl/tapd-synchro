@@ -29,4 +29,6 @@ public interface TestPlanRepository extends CrudRepository<TestPlan, Long> {
      */
     @Query(value ="SELECT name from t_test_plan", nativeQuery = true)
     List<String> findName();
+
+    List<TestPlan> findByWorkspaceId(Long workspaceId);
 }
